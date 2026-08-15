@@ -10,7 +10,7 @@ export const roomBackdrops = [
 
 export const DEFAULT_BACKDROP = roomBackdrops[0].src;
 
-const allowed = new Set(roomBackdrops.map((item) => item.src));
+const allowed = new Set<string>(roomBackdrops.map((item) => item.src));
 
 export function isAllowedBackdrop(src: string): boolean {
   return allowed.has(src);
