@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Baithak
 
-## Getting Started
+Maahol-style Indian nostalgia audio rooms — built with **Next.js**, deployed on **Vercel**.
 
-First, run the development server:
+## Features
+
+- 6 curated nostalgia rooms with Hindi / Tamil / Telugu playlists
+- Hidden YouTube music + ambience players with custom UI
+- Deterministic radio sync (everyone hears the same song at the same second)
+- Live presence and ephemeral chat (Supabase Realtime)
+- Song battles (nominate + vote)
+- Studio: create up to 2 personal rooms (Clerk auth)
+- Share cards, pitch form, legal pages
+
+## Stack
+
+- Next.js 16 App Router + TypeScript + Tailwind CSS v4
+- Clerk (authentication)
+- Supabase (Postgres + Realtime)
+- react-youtube (YouTube IFrame API)
+- Vercel (hosting)
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local
+# Fill in Clerk + Supabase keys
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Run the migration in [`supabase/migrations/001_initial.sql`](supabase/migrations/001_initial.sql) in the Supabase SQL editor.
 
-## Learn More
+Enable **Realtime** for `battle_states` and `radio_epochs` tables.
 
-To learn more about Next.js, take a look at the following resources:
+## Deploy to Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push to GitHub and import in Vercel
+2. Add all env vars from `.env.example`
+3. Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Room URLs
 
-## Deploy on Vercel
+- Official: `/r/chai-tapri`, `/r/truck-dhaba`, etc.
+- Custom: `/r/your-slug` (created in Studio)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Music plays via YouTube embeds — we do not host audio files
+- Rename the product in [`src/data/brand.ts`](src/data/brand.ts) and [`src/data/rooms.ts`](src/data/rooms.ts)
+# baithak-
