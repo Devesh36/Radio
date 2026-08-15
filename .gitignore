@@ -32,6 +32,12 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# local custom-room fallback when Supabase tables are not migrated
+/data/custom-rooms.json
+/data/room-extras.json
+/data/room-removed.json
 
 # vercel
 .vercel

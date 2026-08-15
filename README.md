@@ -52,4 +52,3 @@ Enable **Realtime** for `battle_states` and `radio_epochs` tables.
 
 - Music plays via YouTube embeds — we do not host audio files
 - Rename the product in [`src/data/brand.ts`](src/data/brand.ts) and [`src/data/rooms.ts`](src/data/rooms.ts)
-# baithak-
