@@ -19,9 +19,10 @@ export function getRadioState(
 
   for (const track of tracks) {
     if (elapsed < track.duration_sec) {
+      const startedAt = epochMs + (elapsedTotal - elapsed) * 1000;
       return {
         track,
-        startedAt: nowMs - elapsed * 1000,
+        startedAt,
         offsetSec: elapsed,
       };
     }
@@ -31,7 +32,7 @@ export function getRadioState(
   const track = tracks[0];
   return {
     track,
-    startedAt: nowMs,
+    startedAt: epochMs + elapsedTotal * 1000,
     offsetSec: 0,
   };
 }

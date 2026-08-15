@@ -10,7 +10,7 @@ export const studioFeatureGroups = [
   {
     label: "Catalog",
     items: [
-      { title: "Add from YouTube", body: "Paste a link. Up to 15 songs." },
+      { title: "Add from YouTube", body: "Paste a link. Start with one, up to 15." },
       { title: "Remove tracks", body: "Swap songs when the mood changes." },
       { title: "Hindi, Tamil, Telugu", body: "Public rooms stay Hindi-only." },
     ],

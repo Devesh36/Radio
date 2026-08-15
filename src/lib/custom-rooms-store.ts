@@ -133,6 +133,51 @@ export function fsRemoveTrack(slug: string, youtubeId: string) {
   return rooms[index];
 }
 
+export function fsReplaceRoom(
+  userId: string,
+  input: {
+    slug: string;
+    title: string;
+    tagline?: string | null;
+    background_url?: string | null;
+    chat_enabled?: boolean;
+    battle_enabled?: boolean;
+    tracks: Array<{
+      youtube_id: string;
+      title: string;
+      artist?: string;
+      duration_sec?: number;
+    }>;
+  },
+): StoredCustomRoom | "taken" | null {
+  const rooms = readAll();
+  const slugOwner = rooms.find((room) => room.slug === input.slug);
+  if (slugOwner && slugOwner.clerk_user_id !== userId) return "taken";
+  const index = rooms.findIndex((room) => room.clerk_user_id === userId);
+  if (index < 0) return null;
+  const room = rooms[index];
+  rooms[index] = {
+    ...room,
+    slug: input.slug,
+    title: input.title,
+    tagline: input.tagline ?? room.tagline,
+    background_url: input.background_url ?? room.background_url,
+    chat_enabled: input.chat_enabled ?? room.chat_enabled,
+    battle_enabled: input.battle_enabled ?? room.battle_enabled,
+    custom_tracks: input.tracks.map((track, position) => ({
+      id: crypto.randomUUID(),
+      room_id: room.id,
+      youtube_id: track.youtube_id,
+      title: track.title,
+      artist: track.artist ?? null,
+      duration_sec: track.duration_sec ?? 240,
+      position,
+    })),
+  };
+  writeAll(rooms);
+  return rooms[index];
+}
+
 export function fsUpdateRoom(
   id: string,
   userId: string,

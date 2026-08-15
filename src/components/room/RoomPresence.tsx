@@ -20,7 +20,6 @@ export function RoomPresence({
   enabled,
 }: RoomPresenceProps) {
   const [count, setCount] = useState(1);
-  const [members, setMembers] = useState<PresenceMember[]>([]);
 
   useEffect(() => {
     if (!enabled || !isSlug(roomSlug)) return;
@@ -49,7 +48,6 @@ export function RoomPresence({
             displayName: m.displayName ?? "Guest",
             language: m.language ?? "hindi",
           }));
-        setMembers(list);
         setCount(list.length || 1);
       })
       .subscribe(async (status) => {
@@ -74,7 +72,6 @@ export function RoomPresence({
     <p className="truncate text-[10px] uppercase tracking-[0.16em] text-[#f3e6d8]/80 sm:text-[11px] sm:tracking-[0.18em]">
       <span className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-red-500 align-middle" />
       {count} listening
-      <span className="hidden sm:inline">{members[0] ? ` · ${members[0].displayName}` : ""}</span>
     </p>
   );
 }

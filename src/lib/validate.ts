@@ -1,3 +1,4 @@
+import { DEFAULT_BACKDROP, isAllowedBackdrop } from "@/data/backdrops";
 import { extractYouTubeId } from "@/lib/youtube";
 
 export const SLUG_RE = /^[a-z0-9-]{3,40}$/;
@@ -34,26 +35,15 @@ export function asBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
-export function sanitizeBackgroundUrl(raw: unknown): string {
-  const fallback = "/images/hero-kulhad.jpg";
-  if (typeof raw !== "string") return fallback;
+export function sanitizeBackgroundUrl(raw: unknown): string | null {
+  if (typeof raw !== "string") return DEFAULT_BACKDROP;
   const value = raw.trim();
-  if (/^\/images\/[a-zA-Z0-9._/-]+\.(jpg|jpeg|png|webp|gif)$/i.test(value) && !value.includes("..")) {
-    return value;
-  }
-  try {
-    const url = new URL(value);
-    if (url.protocol !== "https:") return fallback;
-    if (/[)\\s'"<>]/.test(value)) return fallback;
-    if (url.username || url.password) return fallback;
-    return url.toString();
-  } catch {
-    return fallback;
-  }
+  if (!value) return DEFAULT_BACKDROP;
+  return isAllowedBackdrop(value) ? value : null;
 }
 
 export function cssSafeUrl(raw: string): string {
-  return sanitizeBackgroundUrl(raw);
+  return (isAllowedBackdrop(raw) ? raw : DEFAULT_BACKDROP).replace(/["\\]/g, "");
 }
 
 export function parseTrackInput(raw: unknown): {

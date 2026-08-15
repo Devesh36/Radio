@@ -7,21 +7,15 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ProTeaser } from "@/components/ProTeaser";
 import { StudioFeatureGrid } from "@/components/StudioFeatureGrid";
+import { roomBackdrops } from "@/data/backdrops";
 import { MAX_CUSTOM_TRACKS, MIN_CUSTOM_TRACKS } from "@/lib/limits";
 
-interface TrackInput {
-  youtube_id: string;
-  title: string;
-  artist: string;
-  duration_sec: number;
-}
-
-const STARTER_PLAYLIST = `mt9xg0mmt28 | Tum Se Hi | Mohit Chauhan | 258
-N0jnLZxYwYc | Mujhse Mohabbat Ka Izhaar | Kumar Sanu, Alka Yagnik | 300
-cNV5hLSa9H8 | Tujhe Dekha Toh | Lata Mangeshkar, Kumar Sanu | 303
-SBfPs-PMGTA | Pehla Nasha | Udit Narayan, Sadhana Sargam | 258
-OMoU0Pfibc4 | Tere Naam | Udit Narayan, Alka Yagnik | 282
-3NWMK2MRqIk | Tumsa Koi Pyaara | Kumar Sanu, Alka Yagnik | 280`;
+const STARTER_PLAYLIST = `https://www.youtube.com/watch?v=mt9xg0mmt28
+https://www.youtube.com/watch?v=N0jnLZxYwYc
+https://www.youtube.com/watch?v=cNV5hLSa9H8
+https://www.youtube.com/watch?v=SBfPs-PMGTA
+https://www.youtube.com/watch?v=OMoU0Pfibc4
+https://www.youtube.com/watch?v=3NWMK2MRqIk`;
 
 function normalizeSlug(value: string) {
   return value
@@ -33,13 +27,21 @@ function normalizeSlug(value: string) {
     .slice(0, 40);
 }
 
+function parseLinks(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, MAX_CUSTOM_TRACKS);
+}
+
 export default function StudioPage() {
   const router = useRouter();
   const [slug, setSlug] = useState("my-baithak");
   const [title, setTitle] = useState("My Baithak");
   const [tagline, setTagline] = useState("Listen");
   const [backgroundUrl, setBackgroundUrl] = useState("/images/hero-kulhad.jpg");
-  const [tracksText, setTracksText] = useState(STARTER_PLAYLIST);
+  const [tracksText, setTracksText] = useState("https://www.youtube.com/watch?v=mt9xg0mmt28");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [existingSlug, setExistingSlug] = useState<string | null>(null);
@@ -49,27 +51,17 @@ export default function StudioPage() {
       .then((r) => r.json())
       .then((data) => {
         const room = data.rooms?.[0];
-        if (room?.slug) setExistingSlug(room.slug);
+        if (!room?.slug) return;
+        setExistingSlug(room.slug);
+        setSlug(room.slug);
+        if (room.title) setTitle(room.title);
+        if (room.tagline) setTagline(room.tagline);
+        if (room.background_url && roomBackdrops.some((item) => item.src === room.background_url)) {
+          setBackgroundUrl(room.background_url);
+        }
       })
       .catch(() => undefined);
   }, []);
-
-  const parseTracks = (): TrackInput[] => {
-    return tracksText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => {
-        const [youtube_id, titlePart, artistPart, durationPart] = line.split("|");
-        return {
-          youtube_id: youtube_id?.trim() ?? "",
-          title: titlePart?.trim() || "Untitled",
-          artist: artistPart?.trim() || "Unknown",
-          duration_sec: parseInt(durationPart?.trim() || "240", 10) || 240,
-        };
-      })
-      .filter((t) => t.youtube_id.length >= 6);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,9 +77,9 @@ export default function StudioPage() {
       return;
     }
 
-    const tracks = parseTracks();
-    if (tracks.length < MIN_CUSTOM_TRACKS || tracks.length > MAX_CUSTOM_TRACKS) {
-      setError(`Add ${MIN_CUSTOM_TRACKS}–${MAX_CUSTOM_TRACKS} tracks (one per line), or click Use starter cassette.`);
+    const links = parseLinks(tracksText);
+    if (links.length < MIN_CUSTOM_TRACKS) {
+      setError("Paste at least one YouTube link.");
       setLoading(false);
       return;
     }
@@ -101,7 +93,7 @@ export default function StudioPage() {
           title: title.trim() || "Untitled room",
           tagline,
           background_url: backgroundUrl.trim() || "/images/hero-kulhad.jpg",
-          tracks,
+          links,
         }),
       });
 
@@ -128,9 +120,9 @@ export default function StudioPage() {
         </span>
         <h1 className="font-display mt-2 text-3xl text-[#f3e6d8] sm:text-4xl">Build your room</h1>
         <p className="mt-3 text-[#c9b8a8]">
-          Create one personal nostalgia room with {MIN_CUSTOM_TRACKS}–{MAX_CUSTOM_TRACKS}{" "}
-          YouTube tracks. Public rooms stay on a shared radio; yours comes with the
-          full controls.
+          Start with one YouTube link. Add more later inside the room, up to{" "}
+          {MAX_CUSTOM_TRACKS} songs. Public rooms stay on a shared radio; yours
+          comes with the full controls.
         </p>
         <ProTeaser className="mt-4" />
 
@@ -138,33 +130,18 @@ export default function StudioPage() {
           <StudioFeatureGrid />
         </div>
 
-        {existingSlug ? (
-          <div className="mt-10 rounded-2xl p-6" style={{ backgroundColor: "#1f1a17" }}>
-            <p className="text-[#f3e6d8]">You already have a personal room.</p>
-            <p className="mt-2 text-sm text-[#c9b8a8]">
-              Each account can keep one room with up to {MAX_CUSTOM_TRACKS} songs.
-              Delete it from My Rooms if you want to start over.
-            </p>
-            <ProTeaser className="mt-3" />
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href={`/r/${existingSlug}`}
-                className="rounded-full px-5 py-2.5 font-semibold text-white"
-                style={{ backgroundColor: "#c47a52" }}
-              >
-                Enter your room
-              </Link>
-              <Link
-                href="/my-rooms"
-                className="rounded-full bg-[#161210] px-5 py-2.5 text-[#c9b8a8] hover:text-[#f3e6d8]"
-              >
-                Manage room
-              </Link>
-            </div>
-          </div>
-        ) : (
-        <form onSubmit={handleSubmit} className="mt-10 space-y-6" noValidate>
-          <Field label="Room URL slug" hint="e.g. my-dhaba-nights">
+        {existingSlug && (
+          <p className="mt-10 text-sm text-[#c9b8a8]">
+            Saving updates{" "}
+            <Link href={`/r/${existingSlug}`} className="text-[#c47a52] hover:underline">
+              /r/{existingSlug}
+            </Link>
+            . You can keep this URL.
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-6" noValidate>
+          <Field label="Room URL slug" hint="e.g. my-dhaba-nights. Yours to keep if you already have it.">
             <input
               value={slug}
               onChange={(e) => setSlug(normalizeSlug(e.target.value))}
@@ -187,22 +164,41 @@ export default function StudioPage() {
               className="field-input"
             />
           </Field>
-          <Field label="Background image URL">
-            <input
-              value={backgroundUrl}
-              onChange={(e) => setBackgroundUrl(e.target.value)}
-              className="field-input"
-              placeholder="/images/hero-kulhad.jpg"
-            />
+          <Field label="Backdrop" hint="Choose one of the room scenes.">
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+              {roomBackdrops.map((item) => {
+                const active = backgroundUrl === item.src;
+                return (
+                  <button
+                    key={item.src}
+                    type="button"
+                    onClick={() => setBackgroundUrl(item.src)}
+                    className="overflow-hidden rounded-xl"
+                    style={{
+                      outline: active ? "2px solid #c47a52" : "2px solid transparent",
+                      outlineOffset: 2,
+                    }}
+                    aria-label={item.label}
+                    title={item.label}
+                  >
+                    <span
+                      className="block h-14 bg-cover bg-center sm:h-16"
+                      style={{ backgroundImage: `url("${item.src}")` }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
           </Field>
           <Field
-            label={`Playlist (${MIN_CUSTOM_TRACKS}–${MAX_CUSTOM_TRACKS} tracks)`}
-            hint="One per line: youtubeId | Title | Artist | duration_sec"
+            label={`YouTube links (${MIN_CUSTOM_TRACKS}–${MAX_CUSTOM_TRACKS})`}
+            hint="One link per line. Title and artist are filled in for you."
           >
             <textarea
               value={tracksText}
               onChange={(e) => setTracksText(e.target.value)}
-              className="field-input min-h-[180px] font-mono text-sm sm:min-h-[200px]"
+              className="field-input min-h-[140px] text-sm sm:min-h-[160px]"
+              placeholder="https://www.youtube.com/watch?v=…"
               required
             />
             <button
@@ -222,10 +218,9 @@ export default function StudioPage() {
             className="w-full rounded-xl py-3 font-semibold text-white disabled:opacity-50"
             style={{ backgroundColor: "#c47a52" }}
           >
-            {loading ? "Creating…" : "Create room →"}
+            {loading ? "Saving…" : existingSlug ? "Save room →" : "Create room →"}
           </button>
         </form>
-        )}
       </main>
       <SiteFooter />
     </>

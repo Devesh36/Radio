@@ -91,7 +91,13 @@ export async function PATCH(
   };
   if ("title" in body) patch.title = clip(body.title, 80);
   if ("tagline" in body) patch.tagline = clip(body.tagline, 120);
-  if ("background_url" in body) patch.background_url = sanitizeBackgroundUrl(body.background_url);
+  if ("background_url" in body) {
+    const background = sanitizeBackgroundUrl(body.background_url);
+    if (!background) {
+      return NextResponse.json({ error: "Pick one of the room backdrops" }, { status: 400 });
+    }
+    patch.background_url = background;
+  }
   if ("chat_enabled" in body) patch.chat_enabled = asBoolean(body.chat_enabled, true);
   if ("battle_enabled" in body) patch.battle_enabled = asBoolean(body.battle_enabled, true);
 

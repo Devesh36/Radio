@@ -24,7 +24,7 @@ export default function TermsPage() {
         <h2>Room limits</h2>
         <ul>
           <li>Each account may create {MAX_CUSTOM_ROOMS === 1 ? "one personal room" : `up to ${MAX_CUSTOM_ROOMS} personal rooms`}.</li>
-          <li>Rooms must contain {MIN_CUSTOM_TRACKS}–{MAX_CUSTOM_TRACKS} songs.</li>
+          <li>Rooms can start with {MIN_CUSTOM_TRACKS} song and hold up to {MAX_CUSTOM_TRACKS}.</li>
           <li>Songs must be under 9 minutes.</li>
           <li>Tracks must be publicly available YouTube videos.</li>
           <li>Baithak Pro, when it launches, will allow more rooms and larger playlists.</li>

@@ -72,14 +72,32 @@ export function RoomExperience({ room }: RoomExperienceProps) {
     if (!res.ok) return;
     const data = await res.json();
     if (data.track) {
-      setRadioSync({
-        track: data.track,
-        startedAt: data.startedAt,
-        offsetSec: data.offsetSec ?? 0,
+      setRadioSync((prev) => {
+        if (
+          prev &&
+          prev.track.youtubeId === data.track.youtubeId &&
+          prev.startedAt === data.startedAt
+        ) {
+          return prev;
+        }
+        return {
+          track: data.track,
+          startedAt: data.startedAt,
+          offsetSec: data.offsetSec ?? 0,
+        };
       });
       if (typeof data.isHost === "boolean") setIsHost(data.isHost);
       if (data.playlist) {
-        setPlaylist(mergeTracks(data.playlist, extrasRef.current[lang] ?? [], removedRef.current[lang] ?? []));
+        setPlaylist((prev) => {
+          const next = mergeTracks(data.playlist, extrasRef.current[lang] ?? [], removedRef.current[lang] ?? []);
+          if (
+            prev.length === next.length &&
+            prev.every((track, index) => track.youtubeId === next[index]?.youtubeId)
+          ) {
+            return prev;
+          }
+          return next;
+        });
       }
     }
   }, [room.slug]);

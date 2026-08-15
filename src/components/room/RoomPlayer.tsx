@@ -116,6 +116,7 @@ export function RoomPlayer({
   const ambienceRef = useRef<YouTubePlayer | null>(null);
   const musicReady = useRef(false);
   const lastSyncKey = useRef("");
+  const ignorePauseRef = useRef(false);
   const liveRadioRef = useRef(radioLocked);
   const currentTrackRef = useRef<Track | null>(radioSync?.track ?? playlist[0] ?? null);
   const bootIdRef = useRef(radioSync?.track.youtubeId ?? playlist[0]?.youtubeId ?? "");
@@ -157,17 +158,31 @@ export function RoomPlayer({
   const playTrack = useCallback(
     (track: Track, startSeconds = 0, fromRadio = false) => {
       if (radioLocked && !fromRadio) return;
-      setCurrentTrack(track);
-      currentTrackRef.current = track;
-      setElapsed(startSeconds);
-      setDuration(track.duration_sec);
-      onTrackChange?.(track);
+      const sameVideo = currentTrackRef.current?.youtubeId === track.youtubeId;
       if (!fromRadio) {
         setLiveRadio(false);
         liveRadioRef.current = false;
       }
+      if (!sameVideo) {
+        setCurrentTrack(track);
+        currentTrackRef.current = track;
+        setElapsed(startSeconds);
+        setDuration(track.duration_sec);
+        onTrackChange?.(track);
+      }
       if (!musicRef.current || !musicReady.current) return;
       try {
+        if (sameVideo) {
+          const current = musicRef.current.getCurrentTime?.() ?? 0;
+          if (Math.abs(current - startSeconds) <= 8) return;
+          ignorePauseRef.current = true;
+          musicRef.current.seekTo(startSeconds, true);
+          musicRef.current.playVideo();
+          setElapsed(startSeconds);
+          setIsPlaying(true);
+          return;
+        }
+        ignorePauseRef.current = true;
         musicRef.current.loadVideoById({
           videoId: track.youtubeId,
           startSeconds,
@@ -179,7 +194,7 @@ export function RoomPlayer({
         ambienceRef.current?.playVideo();
         setIsPlaying(true);
       } catch {
-        // iframe not ready
+        ignorePauseRef.current = false;
       }
     },
     [musicVolume, onTrackChange, radioLocked],
@@ -221,15 +236,15 @@ export function RoomPlayer({
     const tick = window.setInterval(() => {
       try {
         const t = musicRef.current?.getCurrentTime?.() ?? 0;
-        const d = musicRef.current?.getDuration?.() ?? duration;
-        setElapsed(t);
-        if (d > 0) setDuration(d);
+        const d = musicRef.current?.getDuration?.() ?? 0;
+        setElapsed((prev) => (Math.abs(prev - t) > 0.35 ? t : prev));
+        if (d > 0) setDuration((prev) => (Math.abs(prev - d) > 0.5 ? d : prev));
       } catch {
         // ignore
       }
     }, 500);
     return () => window.clearInterval(tick);
-  }, [isPlaying, duration]);
+  }, [isPlaying]);
 
   const onMusicReady = (event: YouTubeEvent) => {
     musicRef.current = event.target;
@@ -248,14 +263,17 @@ export function RoomPlayer({
     const start = currentTrackRef.current;
     if (!start) return;
     try {
-      event.target.loadVideoById({
-        videoId: start.youtubeId,
-        startSeconds: 0,
-      });
+      ignorePauseRef.current = true;
+      if (start.youtubeId !== bootIdRef.current) {
+        event.target.loadVideoById({
+          videoId: start.youtubeId,
+          startSeconds: 0,
+        });
+      }
       event.target.playVideo();
       setIsPlaying(true);
     } catch {
-      // iframe not ready
+      ignorePauseRef.current = false;
     }
   };
 
@@ -294,8 +312,17 @@ export function RoomPlayer({
   };
 
   const onMusicStateChange = (event: YouTubeEvent) => {
-    if (event.data === 1) setIsPlaying(true);
-    if (event.data === 2) setIsPlaying(false);
+    if (event.data === 1) {
+      ignorePauseRef.current = false;
+      setIsPlaying(true);
+      return;
+    }
+    if (event.data === 3) return;
+    if (event.data === 2) {
+      if (ignorePauseRef.current) return;
+      setIsPlaying(false);
+      return;
+    }
     if (event.data === 0) {
       if (radioLocked || liveRadioRef.current) {
         syncFromNowPlaying();

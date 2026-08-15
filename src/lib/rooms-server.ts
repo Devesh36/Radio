@@ -25,7 +25,7 @@ function adaptCustomRoom(
     accent: "#c47a52",
     gradientA: "#1a1208",
     gradientB: "#070504",
-    imageUrl: sanitizeBackgroundUrl(customRoom.background_url ?? "/images/hero-kulhad.jpg"),
+    imageUrl: sanitizeBackgroundUrl(customRoom.background_url) ?? "/images/hero-kulhad.jpg",
     ambienceIds: { default: "F74m01xL2D0" },
     radioEpoch: Number(customRoom.radio_epoch),
     catalogs: {

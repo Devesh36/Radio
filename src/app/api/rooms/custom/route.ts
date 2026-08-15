@@ -4,10 +4,10 @@ import { getOfficialRoom } from "@/data/rooms";
 import {
   fsInsertRoom,
   fsListRooms,
-  fsSlugTaken,
+  fsReplaceRoom,
   isMissingTableError,
 } from "@/lib/custom-rooms-store";
-import { MAX_CUSTOM_ROOMS, MAX_CUSTOM_TRACKS, MIN_CUSTOM_TRACKS } from "@/lib/limits";
+import { MAX_CUSTOM_TRACKS, MIN_CUSTOM_TRACKS } from "@/lib/limits";
 import { createAdminSupabase, persistenceUnavailable } from "@/lib/supabase/server";
 import {
   asBoolean,
@@ -18,9 +18,47 @@ import {
   readJson,
   sanitizeBackgroundUrl,
 } from "@/lib/validate";
+import { resolveYouTubeTrack } from "@/lib/youtube";
 
 function failDb() {
   return NextResponse.json(genericError(), { status: 500 });
+}
+
+async function resolveTracks(body: Record<string, unknown>) {
+  const seen = new Set<string>();
+  const resolved: Array<{
+    youtube_id: string;
+    title: string;
+    artist: string;
+    duration_sec: number;
+  }> = [];
+
+  const links = Array.isArray(body.links) ? body.links : [];
+  for (const item of links) {
+    if (typeof item !== "string" || resolved.length >= MAX_CUSTOM_TRACKS) continue;
+    const track = await resolveYouTubeTrack(item);
+    if (!track || seen.has(track.youtubeId)) continue;
+    seen.add(track.youtubeId);
+    resolved.push({
+      youtube_id: track.youtubeId,
+      title: track.title,
+      artist: track.artist,
+      duration_sec: track.duration_sec,
+    });
+  }
+
+  if (resolved.length > 0) return resolved;
+
+  const incoming = Array.isArray(body.tracks) ? body.tracks : [];
+  for (const item of incoming) {
+    if (resolved.length >= MAX_CUSTOM_TRACKS) break;
+    const parsed = parseTrackInput(item);
+    if (!parsed || seen.has(parsed.youtube_id)) continue;
+    seen.add(parsed.youtube_id);
+    resolved.push(parsed);
+  }
+
+  return resolved;
 }
 
 export async function GET() {
@@ -74,10 +112,13 @@ export async function POST(request: Request) {
   const title = clip(body.title, 80);
   const tagline = clip(body.tagline, 120) || "Listen";
   const background_url = sanitizeBackgroundUrl(body.background_url);
+  if (!background_url) {
+    return NextResponse.json({ error: "Pick one of the room backdrops" }, { status: 400 });
+  }
   const chat_enabled = asBoolean(body.chat_enabled, true);
   const battle_enabled = asBoolean(body.battle_enabled, true);
 
-  if (!slug || !title || !Array.isArray(body.tracks)) {
+  if (!slug || !title) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
@@ -89,10 +130,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "That URL is already a Baithak room" }, { status: 409 });
   }
 
-  const tracks = body.tracks.map(parseTrackInput).filter((track): track is NonNullable<typeof track> => Boolean(track));
+  const tracks = await resolveTracks(body);
   if (tracks.length < MIN_CUSTOM_TRACKS || tracks.length > MAX_CUSTOM_TRACKS) {
     return NextResponse.json(
-      { error: `Need ${MIN_CUSTOM_TRACKS}–${MAX_CUSTOM_TRACKS} valid tracks` },
+      { error: `Add ${MIN_CUSTOM_TRACKS}–${MAX_CUSTOM_TRACKS} YouTube links` },
       { status: 400 },
     );
   }
@@ -111,27 +152,56 @@ export async function POST(request: Request) {
 
   const supabase = createAdminSupabase();
   if (supabase) {
-    const { count, error: countError } = await supabase
+    const { data: mine, error: mineError } = await supabase
       .from("custom_rooms")
-      .select("*", { count: "exact", head: true })
-      .eq("clerk_user_id", userId);
+      .select("id, slug")
+      .eq("clerk_user_id", userId)
+      .maybeSingle();
 
-    if (!countError) {
-      if ((count ?? 0) >= MAX_CUSTOM_ROOMS) {
-        return NextResponse.json(
-          { error: "You can only have one personal room. More rooms land with Baithak Pro — coming soon." },
-          { status: 400 },
-        );
-      }
+    if (mineError && !isMissingTableError(mineError)) {
+      return failDb();
+    }
 
-      const { data: existingSlug } = await supabase
+    if (!mineError) {
+      const { data: slugOwner } = await supabase
         .from("custom_rooms")
-        .select("id")
+        .select("id, clerk_user_id")
         .eq("slug", slug)
         .maybeSingle();
 
-      if (existingSlug) {
+      if (slugOwner && slugOwner.clerk_user_id !== userId) {
         return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
+      }
+
+      const trackRows = (roomId: string) =>
+        tracks.map((track, i) => ({
+          room_id: roomId,
+          youtube_id: track.youtube_id,
+          title: track.title,
+          artist: track.artist,
+          duration_sec: track.duration_sec,
+          position: i,
+        }));
+
+      if (mine) {
+        const { error: updateError } = await supabase
+          .from("custom_rooms")
+          .update({
+            slug,
+            title,
+            tagline,
+            background_url,
+            chat_enabled,
+            battle_enabled,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", mine.id);
+        if (updateError) return failDb();
+        const { error: deleteError } = await supabase.from("custom_tracks").delete().eq("room_id", mine.id);
+        if (deleteError) return failDb();
+        const { error: trackError } = await supabase.from("custom_tracks").insert(trackRows(mine.id));
+        if (trackError) return failDb();
+        return NextResponse.json({ room: { id: mine.id, slug, title } });
       }
 
       const { data: room, error } = await supabase
@@ -151,15 +221,7 @@ export async function POST(request: Request) {
         .single();
 
       if (!error && room) {
-        const trackRows = tracks.map((track, i) => ({
-          room_id: room.id,
-          youtube_id: track.youtube_id,
-          title: track.title,
-          artist: track.artist,
-          duration_sec: track.duration_sec,
-          position: i,
-        }));
-        const { error: trackError } = await supabase.from("custom_tracks").insert(trackRows);
+        const { error: trackError } = await supabase.from("custom_tracks").insert(trackRows(room.id));
         if (trackError) {
           await supabase.from("custom_rooms").delete().eq("id", room.id);
           return failDb();
@@ -170,8 +232,6 @@ export async function POST(request: Request) {
       if (error && !isMissingTableError(error)) {
         return failDb();
       }
-    } else if (!isMissingTableError(countError)) {
-      return failDb();
     }
 
     if (process.env.NODE_ENV === "production") {
@@ -179,13 +239,19 @@ export async function POST(request: Request) {
     }
   }
 
-  if (fsListRooms(userId).length >= MAX_CUSTOM_ROOMS) {
-    return NextResponse.json(
-      { error: "You can only have one personal room. More rooms land with Baithak Pro — coming soon." },
-      { status: 400 },
-    );
+  const mine = fsListRooms(userId)[0];
+  if (mine) {
+    const replaced = fsReplaceRoom(userId, payload);
+    if (replaced === "taken") {
+      return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
+    }
+    if (replaced) {
+      return NextResponse.json({ room: { id: replaced.id, slug: replaced.slug, title: replaced.title } });
+    }
   }
-  if (fsSlugTaken(slug)) {
+
+  const taken = fsListRooms().some((room) => room.slug === slug && room.clerk_user_id !== userId);
+  if (taken) {
     return NextResponse.json({ error: "Slug already taken" }, { status: 409 });
   }
 
