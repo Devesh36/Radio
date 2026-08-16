@@ -18,14 +18,13 @@ export default function AboutPage() {
         <p>
           Memory is tied to sound more than any other sense. The crackle of a
           cassette, the ambient noise of a chai tapri, the distant dhol from a
-          baraat — these sounds carry an entire world with them.
+          garba night — these sounds carry an entire world with them.
         </p>
         <h2>How it works</h2>
         <p>
-          Step into a room and you&apos;ll hear music playing synchronised across
-          everyone in the room — the same song, at the same moment. The ambient
-          soundscape wraps around it. Chat and song battles let you connect with
-          other listeners.
+          Step into a room and you&apos;ll hear the catalog with the room&apos;s
+          ambient soundscape around it. Playback is yours — skip, seek, or pick
+          a song without changing what anyone else hears. Private rooms add chat.
         </p>
         <p>
           We use YouTube for the music layer, spatial audio design for the ambience,

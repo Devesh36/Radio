@@ -18,7 +18,9 @@ import {
   readJson,
   sanitizeBackgroundUrl,
 } from "@/lib/validate";
-import { resolveYouTubeTrack } from "@/lib/youtube";
+import { resolveMediaImport } from "@/lib/youtube";
+
+export const maxDuration = 60;
 
 function failDb() {
   return NextResponse.json(genericError(), { status: 500 });
@@ -36,15 +38,17 @@ async function resolveTracks(body: Record<string, unknown>) {
   const links = Array.isArray(body.links) ? body.links : [];
   for (const item of links) {
     if (typeof item !== "string" || resolved.length >= MAX_CUSTOM_TRACKS) continue;
-    const track = await resolveYouTubeTrack(item);
-    if (!track || seen.has(track.youtubeId)) continue;
-    seen.add(track.youtubeId);
-    resolved.push({
-      youtube_id: track.youtubeId,
-      title: track.title,
-      artist: track.artist,
-      duration_sec: track.duration_sec,
-    });
+    const tracks = await resolveMediaImport(item, MAX_CUSTOM_TRACKS - resolved.length);
+    for (const track of tracks) {
+      if (seen.has(track.youtubeId) || resolved.length >= MAX_CUSTOM_TRACKS) continue;
+      seen.add(track.youtubeId);
+      resolved.push({
+        youtube_id: track.youtubeId,
+        title: track.title,
+        artist: track.artist,
+        duration_sec: track.duration_sec,
+      });
+    }
   }
 
   if (resolved.length > 0) return resolved;
@@ -116,7 +120,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Pick one of the room backdrops" }, { status: 400 });
   }
   const chat_enabled = asBoolean(body.chat_enabled, true);
-  const battle_enabled = asBoolean(body.battle_enabled, true);
+  const battle_enabled = asBoolean(body.battle_enabled, false);
 
   if (!slug || !title) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });

@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { type LanguageKey } from "@/data/brand";
 import { getAmbienceId } from "@/data/rooms";
-import { RoomBattle } from "@/components/room/RoomBattle";
+import { RoomAtmosphere } from "@/components/room/RoomAtmosphere";
 import { RoomChat } from "@/components/room/RoomChat";
+import { RoomRipples } from "@/components/room/RoomRipples";
 import { RoomOnboarding } from "@/components/room/RoomOnboarding";
 import { RoomPlayer } from "@/components/room/RoomPlayer";
 import { RoomPresence } from "@/components/room/RoomPresence";
 import { ShareSheet } from "@/components/room/ShareSheet";
+import { useRoomPresence } from "@/hooks/useRoomPresence";
 import type { OfficialRoom, RadioState, Track } from "@/lib/types";
 import { MAX_CUSTOM_TRACKS } from "@/lib/limits";
 import { cssSafeUrl } from "@/lib/validate";
@@ -89,7 +91,11 @@ export function RoomExperience({ room }: RoomExperienceProps) {
       if (typeof data.isHost === "boolean") setIsHost(data.isHost);
       if (data.playlist) {
         setPlaylist((prev) => {
-          const next = mergeTracks(data.playlist, extrasRef.current[lang] ?? [], removedRef.current[lang] ?? []);
+          const next = mergeTracks(
+            data.playlist,
+            [...(extrasRef.current[lang] ?? []), ...prev],
+            removedRef.current[lang] ?? [],
+          );
           if (
             prev.length === next.length &&
             prev.every((track, index) => track.youtubeId === next[index]?.youtubeId)
@@ -102,61 +108,77 @@ export function RoomExperience({ room }: RoomExperienceProps) {
     }
   }, [room.slug]);
 
-  const handleEnter = (name: string, lang: LanguageKey) => {
-    const nextLang = room.isCustom ? lang : "hindi";
+  const handleEnter = (name: string) => {
     setDisplayName(name);
-    setLanguage(nextLang);
-    setPlaylist(mergeTracks(room.catalogs[nextLang] ?? room.catalogs.hindi, extras[nextLang], removed[nextLang]));
+    setLanguage("hindi");
+    setPlaylist(mergeTracks(room.catalogs.hindi, extras.hindi, removed.hindi));
     setEntered(true);
-    fetchRadio(nextLang);
-  };
-
-  const changeLanguage = (lang: LanguageKey) => {
-    if (!room.isCustom || lang === language) return;
-    setLanguage(lang);
-    localStorage.setItem("baithak-language", lang);
-    setPlaylist(mergeTracks(room.catalogs[lang] ?? room.catalogs.hindi, extras[lang], removed[lang]));
-    setRadioSync(null);
-    fetchRadio(lang);
+    if (room.isCustom) fetchRadio("hindi");
   };
 
   const addTrackFromLink = async (url: string) => {
+    const remaining = Math.max(0, MAX_CUSTOM_TRACKS - playlist.length);
     const resolveRes = await fetch("/api/tracks/resolve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, limit: Math.max(1, remaining || 1) }),
     });
     const resolved = await resolveRes.json();
-    if (!resolveRes.ok || !resolved.track) {
+    const incoming = (
+      Array.isArray(resolved.tracks) ? resolved.tracks : resolved.track ? [resolved.track] : []
+    ) as Track[];
+    if (!resolveRes.ok || incoming.length === 0) {
       throw new Error(resolved.error ?? "Couldn’t add that link");
     }
-    const track = resolved.track as Track;
-    const alreadyInPlaylist = playlist.some((item) => item.youtubeId === track.youtubeId);
-    if (!alreadyInPlaylist && playlist.length >= MAX_CUSTOM_TRACKS) {
-      throw new Error(
-        `This room can hold ${MAX_CUSTOM_TRACKS} songs. More rooms and bigger playlists land with Baithak Pro — coming soon.`,
-      );
+
+    const added: Track[] = [];
+    let nextPlaylist = playlist;
+    for (const track of incoming) {
+      if (nextPlaylist.some((item) => item.youtubeId === track.youtubeId)) continue;
+      if (nextPlaylist.length >= MAX_CUSTOM_TRACKS) {
+        if (added.length === 0) {
+          throw new Error(
+            `This room can hold ${MAX_CUSTOM_TRACKS} songs. More rooms and bigger playlists land with Baithak Pro — coming soon.`,
+          );
+        }
+        break;
+      }
+      const saveRes = await fetch(`/api/rooms/${room.slug}/tracks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ track, language }),
+      });
+      if (!saveRes.ok) {
+        const saved = await saveRes.json().catch(() => null);
+        if (added.length === 0) {
+          throw new Error(saved?.error ?? "Couldn’t add that song");
+        }
+        break;
+      }
+      added.push(track);
+      nextPlaylist = mergeTracks(nextPlaylist, [track]);
     }
-    setRemoved((prev) => ({
-      ...prev,
-      [language]: (prev[language] ?? []).filter((id) => id !== track.youtubeId),
-    }));
-    setExtras((prev) => {
-      const current = prev[language] ?? [];
-      if (current.some((item) => item.youtubeId === track.youtubeId)) return prev;
-      return { ...prev, [language]: [...current, track] };
-    });
-    setPlaylist((prev) => mergeTracks(prev, [track]));
-    const saveRes = await fetch(`/api/rooms/${room.slug}/tracks`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ track, language }),
-    });
-    if (!saveRes.ok) {
-      const saved = await saveRes.json().catch(() => null);
-      throw new Error(saved?.error ?? "Couldn’t add that song");
+
+    if (added.length === 0) {
+      throw new Error("Those songs are already in this room");
     }
-    return track;
+
+    const addedIds = new Set(added.map((track) => track.youtubeId));
+    const nextRemoved = {
+      ...removedRef.current,
+      [language]: (removedRef.current[language] ?? []).filter((id) => !addedIds.has(id)),
+    };
+    const currentExtras = extrasRef.current[language] ?? [];
+    const extra = added.filter((track) => !currentExtras.some((item) => item.youtubeId === track.youtubeId));
+    const nextExtras = extra.length
+      ? { ...extrasRef.current, [language]: [...currentExtras, ...extra] }
+      : extrasRef.current;
+    extrasRef.current = nextExtras;
+    removedRef.current = nextRemoved;
+    setRemoved(nextRemoved);
+    setExtras(nextExtras);
+    setPlaylist(nextPlaylist);
+    return added;
   };
 
   const removeTrackFromCatalog = async (youtubeId: string) => {
@@ -191,20 +213,32 @@ export function RoomExperience({ room }: RoomExperienceProps) {
   };
 
   useEffect(() => {
-    if (!entered) return;
-    const interval = setInterval(() => fetchRadio(language), room.isCustom ? 30000 : 8000);
+    if (!entered || !room.isCustom) return;
+    fetchRadio(language);
+    const interval = setInterval(() => fetchRadio(language), 30000);
     return () => clearInterval(interval);
   }, [entered, language, fetchRadio, room.isCustom]);
 
   const ambienceId = getAmbienceId(room, language);
+  const listeningTrack = currentTrack ?? playlist[0] ?? null;
+  const { count, members } = useRoomPresence({
+    roomSlug: room.slug,
+    displayName,
+    language,
+    track: listeningTrack,
+    enabled: entered,
+  });
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-black">
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="room-backdrop absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url("${cssSafeUrl(room.imageUrl)}")` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/35" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/35" />
+      <div className="grain vignette pointer-events-none absolute inset-0 z-[6]" />
+      <RoomAtmosphere />
+      <RoomRipples />
 
       <header
         className="relative z-20 flex items-center justify-between gap-3 px-4 py-3 text-[11px] uppercase tracking-[0.18em] text-[#f3e6d8]/80 sm:px-5 md:px-8"
@@ -215,32 +249,23 @@ export function RoomExperience({ room }: RoomExperienceProps) {
         </Link>
         {entered && (
           <div className="min-w-0 flex-1 truncate text-center">
-            <RoomPresence
-              roomSlug={room.slug}
-              displayName={displayName}
-              language={language}
-              enabled
-            />
+            <RoomPresence count={count} />
           </div>
         )}
-        {room.isCustom ? (
-          <div className="min-w-0 max-w-[55%] text-right">
-            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.22em] text-[#f3e6d8]/70">
-              {room.emoji} {room.slug.replaceAll("-", " ")}
-            </p>
-            <h1 className="font-display truncate text-lg normal-case tracking-normal text-[#f3e6d8] sm:text-xl">
-              {room.name}
-            </h1>
-          </div>
-        ) : (
-          <p className="hidden max-w-[40%] truncate text-right sm:block">{room.name}</p>
-        )}
+        <div className="min-w-0 max-w-[55%] text-right">
+          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.22em] text-[#f3e6d8]/70">
+            {room.emoji} {room.isCustom ? "Private room" : "Live room"}
+          </p>
+          <h1 className="font-display truncate text-lg normal-case tracking-normal text-[#f3e6d8] sm:text-xl">
+            {room.name}
+          </h1>
+        </div>
       </header>
 
-      {!room.isCustom && (
-        <section className="relative z-10 flex min-h-[100dvh] flex-col items-center justify-center px-4 pb-36 text-center sm:px-5">
+      {!entered && (
+        <section className="pointer-events-none relative z-10 flex min-h-[100dvh] flex-col items-center justify-center px-4 pb-36 text-center sm:px-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f3e6d8]/70">
-            {room.emoji} {room.slug.replaceAll("-", " ")}
+            {room.emoji} {room.isCustom ? "Private room" : "Live room"}
           </p>
           <h1 className="font-display mt-3 max-w-4xl text-4xl leading-[1.05] text-[#f3e6d8] drop-shadow-[0_8px_40px_rgba(0,0,0,0.55)] sm:text-5xl md:text-7xl">
             {room.name}
@@ -251,7 +276,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
       {!entered && (
         <RoomOnboarding
           roomName={room.name}
-          showLanguage={Boolean(room.isCustom)}
+          chatEnabled={Boolean(room.isCustom && room.chatEnabled)}
           onComplete={handleEnter}
         />
       )}
@@ -267,21 +292,16 @@ export function RoomExperience({ room }: RoomExperienceProps) {
             radioSync={radioSync}
             onTrackChange={setCurrentTrack}
             onShare={room.isCustom ? () => setShowShare(true) : undefined}
-            onLanguageChange={room.isCustom ? changeLanguage : undefined}
             onAddTrack={room.isCustom && isHost ? addTrackFromLink : undefined}
             onRemoveTrack={room.isCustom && isHost ? removeTrackFromCatalog : undefined}
-            radioLocked={!room.isCustom}
+            radioLocked={false}
+            liveSyncEnabled={false}
           />
           <RoomChat
             roomSlug={room.slug}
             displayName={displayName}
             enabled={Boolean(room.isCustom && room.chatEnabled)}
-          />
-          <RoomBattle
-            roomSlug={room.slug}
-            displayName={displayName}
-            playlist={playlist}
-            enabled={Boolean(room.isCustom && room.battleEnabled)}
+            listeners={members}
           />
         </>
       )}

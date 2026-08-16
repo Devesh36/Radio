@@ -70,7 +70,7 @@ export function fsInsertRoom(input: {
     background_url: input.background_url ?? null,
     theme: input.theme ?? "default",
     chat_enabled: input.chat_enabled ?? true,
-    battle_enabled: input.battle_enabled ?? true,
+    battle_enabled: input.battle_enabled ?? false,
     radio_epoch: Date.now(),
     created_at: now,
     custom_tracks: input.tracks.map((track, index) => ({

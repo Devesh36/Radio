@@ -50,8 +50,8 @@ export default function MyRoomsPage() {
           <div>
             <h1 className="font-display text-3xl text-[#f3e6d8] sm:text-4xl">My rooms</h1>
             <p className="mt-2 max-w-md text-[#c9b8a8]">
-              Your private baithak — pick, skip, add, and remove songs. Public
-              rooms stay on the shared radio.
+              Your private baithak — add and remove YouTube songs. Public rooms
+              already let everyone skip and pick from the catalog.
             </p>
           </div>
           {!loading && !room && (

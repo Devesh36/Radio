@@ -41,7 +41,7 @@ export default function HomePage() {
             </h1>
             <p className="mt-5 max-w-xl text-base text-[#c9b8a8] sm:mt-6 sm:text-lg">
               We took the settings that defined growing up in 90s India — the chai
-              tapri, the STD booth, the baraat band — and turned them into living
+              tapri, the STD booth, the garba night — and turned them into living
               audio spaces. Step inside. Put your headphones on.
             </p>
             <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:gap-4">
@@ -100,9 +100,8 @@ export default function HomePage() {
                 </span>
                 <h2 className="font-display mt-2 text-3xl text-[#f3e6d8] sm:text-4xl">Make it yours.</h2>
                 <p className="mt-4 text-[#c9b8a8]">
-                  Public rooms stay on a shared radio — everyone hears the same
-                  song, and nobody can change it. Build your own room and you get
-                  the full deck.
+                  Public rooms let everyone pick and skip their own song. Build
+                  your own room to add YouTube tracks, chat, and share.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">

@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { LanguageKey } from "@/data/brand";
+import { MAX_CUSTOM_TRACKS } from "@/lib/limits";
 import type { Track } from "@/lib/types";
 
 type ExtraMap = Record<string, Partial<Record<LanguageKey, Track[]>>>;
@@ -8,7 +9,7 @@ type RemovedMap = Record<string, Partial<Record<LanguageKey, string[]>>>;
 
 const EXTRAS_PATH = join(process.cwd(), "data", "room-extras.json");
 const REMOVED_PATH = join(process.cwd(), "data", "room-removed.json");
-const MAX_EXTRAS = 40;
+const MAX_EXTRAS = MAX_CUSTOM_TRACKS;
 
 function readJson<T>(path: string, fallback: T): T {
   try {

@@ -34,7 +34,7 @@ function adaptCustomRoom(
       telugu: catalogTracks,
     },
     chatEnabled: customRoom.chat_enabled,
-    battleEnabled: customRoom.battle_enabled,
+    battleEnabled: false,
     isCustom: true,
   };
 }

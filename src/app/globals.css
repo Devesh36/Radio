@@ -220,6 +220,118 @@ summary {
   border: 1px solid rgba(243, 230, 216, 0.08);
 }
 
+.room-backdrop {
+  transform: scale(1.06);
+  animation: room-drift 42s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.room-atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  overflow: hidden;
+}
+
+.room-mote {
+  position: absolute;
+  bottom: -8%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(243, 230, 216, 0.85) 0%, rgba(196, 122, 82, 0.15) 70%, transparent 100%);
+  box-shadow: 0 0 10px rgba(196, 122, 82, 0.35);
+  animation-name: room-float;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  opacity: 0;
+}
+
+@keyframes room-drift {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.14) translate3d(-1.6%, -1.2%, 0);
+  }
+}
+
+@keyframes room-float {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.7;
+  }
+  70% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translate3d(18px, -115vh, 0);
+    opacity: 0;
+  }
+}
+
+.room-ripples {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  overflow: hidden;
+}
+
+.room-ripple {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+}
+
+.room-ripple i {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 230, 216, 0.28);
+  box-shadow: 0 0 8px rgba(196, 122, 82, 0.12);
+  animation: water-ripple 0.85s ease-out forwards;
+}
+
+.room-ripple i:nth-child(2) {
+  animation-delay: 0.1s;
+  border-color: rgba(196, 122, 82, 0.2);
+}
+
+.room-ripple i:nth-child(3) {
+  animation-delay: 0.2s;
+  border-color: rgba(243, 230, 216, 0.14);
+}
+
+@keyframes water-ripple {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.4;
+  }
+  70% {
+    opacity: 0.12;
+  }
+  100% {
+    transform: scale(16);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .room-backdrop,
+  .room-mote,
+  .room-ripple i {
+    animation: none;
+  }
+
+  .room-backdrop {
+    transform: none;
+  }
+}
+
 .room-dock {
   bottom: max(0.75rem, env(safe-area-inset-bottom));
 }

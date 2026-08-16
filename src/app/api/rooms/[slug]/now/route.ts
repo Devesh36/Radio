@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { ensureBattleState, getNowPlaying, resolveRoom } from "@/lib/rooms-server";
+import { getNowPlaying, resolveRoom } from "@/lib/rooms-server";
 import { languages, type LanguageKey } from "@/data/brand";
 import { userOwnsCustomRoom } from "@/lib/room-auth";
 import { isSlug } from "@/lib/validate";
@@ -25,13 +25,6 @@ export async function GET(
   const lang = (
     resolved.type === "official" || !(requested in languages) ? "hindi" : requested
   ) as LanguageKey;
-
-  const playlist =
-    resolved.room.catalogs[lang] ?? resolved.room.catalogs.hindi;
-
-  if (resolved.room.battleEnabled) {
-    await ensureBattleState(slug, playlist);
-  }
 
   const now = await getNowPlaying(slug, lang);
   if (!now) {

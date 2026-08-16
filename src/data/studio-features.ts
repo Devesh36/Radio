@@ -10,9 +10,9 @@ export const studioFeatureGroups = [
   {
     label: "Catalog",
     items: [
-      { title: "Add from YouTube", body: "Paste a link. Start with one, up to 15." },
+      { title: "Add from YouTube", body: "Paste a video, playlist, or Spotify link. Up to 50." },
       { title: "Remove tracks", body: "Swap songs when the mood changes." },
-      { title: "Hindi, Tamil, Telugu", body: "Public rooms stay Hindi-only." },
+      { title: "Shared catalog", body: "Public rooms play the Hindi catalog." },
     ],
   },
   {
@@ -26,7 +26,7 @@ export const studioFeatureGroups = [
     label: "Together",
     items: [
       { title: "Room chat", body: "Public rooms have none." },
-      { title: "Song battles", body: "Nominate and vote the next round." },
+      { title: "Your own playback", body: "Everyone picks their own song." },
       { title: "Share this song", body: "Copy the track and room link." },
     ],
   },

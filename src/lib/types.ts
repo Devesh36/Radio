@@ -89,4 +89,7 @@ export interface PresenceMember {
   displayName: string;
   language: LanguageKey;
   online_at?: string;
+  trackTitle?: string;
+  trackArtist?: string;
+  youtubeId?: string;
 }

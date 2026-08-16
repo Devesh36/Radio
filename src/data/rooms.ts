@@ -17,11 +17,25 @@ function tracks(
 /** Roadside cassette radio — 90s Kumar Sanu, Alka, Udit, Lata */
 const chaiHindi = tracks([
   { youtubeId: "cNV5hLSa9H8", title: "Tujhe Dekha Toh", artist: "Lata Mangeshkar, Kumar Sanu", duration_sec: 303 },
-  { youtubeId: "SBfPs-PMGTA", title: "Pehla Nasha", artist: "Udit Narayan, Sadhana Sargam", duration_sec: 258 },
+  { youtubeId: "iSUK1QoK9-E", title: "Pehla Nasha", artist: "Udit Narayan, Sadhana Sargam", duration_sec: 297 },
   { youtubeId: "OMoU0Pfibc4", title: "Tere Naam", artist: "Udit Narayan, Alka Yagnik", duration_sec: 282 },
-  { youtubeId: "N0jnLZxYwYc", title: "Mujhse Mohabbat Ka Izhaar", artist: "Kumar Sanu, Alka Yagnik", duration_sec: 300 },
+  { youtubeId: "9u-r5W4WVO4", title: "Tip Tip Barsa Paani", artist: "Alka Yagnik, Udit Narayan", duration_sec: 312 },
+  { youtubeId: "bWNkpJdkOj4", title: "Dholna", artist: "Lata Mangeshkar, Udit Narayan", duration_sec: 313 },
+  { youtubeId: "hw_HpTI_Wkw", title: "Ho Gaya Hai Tujhko", artist: "Lata Mangeshkar, Udit Narayan", duration_sec: 285 },
+  { youtubeId: "s1LozokQjIg", title: "Mere Khwabon Mein", artist: "Lata Mangeshkar", duration_sec: 240 },
+  { youtubeId: "OEpFiDKqH7E", title: "Are Re Are", artist: "Lata Mangeshkar, Udit Narayan", duration_sec: 300 },
+  { youtubeId: "jBpRItrod-Q", title: "Ruk Ja O Dil Deewane", artist: "Udit Narayan", duration_sec: 312 },
+  { youtubeId: "fTauOK8J-U8", title: "Ek Ladki Ko Dekha", artist: "Kumar Sanu", duration_sec: 268 },
+  { youtubeId: "XaPnZTljQbI", title: "Teri Chunariya", artist: "Kumar Sanu, Alka Yagnik", duration_sec: 310 },
+  { youtubeId: "5SvIuD6wJRI", title: "Do Dil Mil Rahe Hain", artist: "Kumar Sanu", duration_sec: 305 },
+  { youtubeId: "W5lusYuAW0s", title: "Pardesi Pardesi", artist: "Udit Narayan, Alka Yagnik, Sapna Awasthi", duration_sec: 340 },
+  { youtubeId: "vzWWTX83C_Q", title: "Tujhe Yaad Na Meri Aayi", artist: "Udit Narayan, Alka Yagnik", duration_sec: 318 },
+  { youtubeId: "gmXlGQAg400", title: "Koi Mil Gaya", artist: "Udit Narayan, Alka Yagnik", duration_sec: 292 },
+  { youtubeId: "RVQsBlI35vw", title: "Mera Dil Bhi Kitna Pagal Hai", artist: "Kumar Sanu, Alka Yagnik", duration_sec: 312 },
   { youtubeId: "3NWMK2MRqIk", title: "Tumsa Koi Pyaara", artist: "Kumar Sanu, Alka Yagnik", duration_sec: 280 },
-  { youtubeId: "oFxbBeYhLqM", title: "Saaton Janam Main Tere", artist: "Kumar Sanu, Alka Yagnik", duration_sec: 320 },
+  { youtubeId: "f0oiheLlFW4", title: "Saaton Janam Main Tere", artist: "Kumar Sanu, Alka Yagnik", duration_sec: 320 },
+  { youtubeId: "asVkFSVdJPo", title: "Mujhse Mohabbat Ka Izhaar", artist: "Kumar Sanu, Alka Yagnik", duration_sec: 300 },
+  { youtubeId: "96YVQBjrtWE", title: "Zara Sa Jhoom Loon Main", artist: "Asha Bhosle, Abhijeet", duration_sec: 300 },
 ]);
 
 const chaiTamil = tracks([
@@ -42,12 +56,26 @@ const chaiTelugu = tracks([
 
 /** Highway tape deck — truck anthems, road songs, diesel-night radio */
 const dhabaHindi = tracks([
-  { youtubeId: "9yT4F8hzykY", title: "Chaiyya Chaiyya", artist: "Sukhwinder Singh, Sapna Awasthi", duration_sec: 416 },
+  { youtubeId: "zAT2ydBOwcU", title: "Chaiyya Chaiyya", artist: "Sukhwinder Singh, Sapna Awasthi", duration_sec: 416 },
   { youtubeId: "8HDTS80dlr4", title: "Patakha Guddi", artist: "Nooran Sisters, A. R. Rahman", duration_sec: 249 },
-  { youtubeId: "ttIKsnxPrMY", title: "Nadaan Parinde", artist: "Mohit Chauhan", duration_sec: 300 },
-  { youtubeId: "6w67NOaRe-w", title: "Ilahi", artist: "Arijit Singh", duration_sec: 204 },
   { youtubeId: "30zJZPb-o3Q", title: "Patakha Guddi (Male)", artist: "A. R. Rahman", duration_sec: 358 },
-  { youtubeId: "tD8M2BpSnwc", title: "Dekhne Walon Ne", artist: "Udit Narayan, Alka Yagnik", duration_sec: 444 },
+  { youtubeId: "dmwWAZYS-q4", title: "Dekhne Walon Ne", artist: "Udit Narayan, Alka Yagnik", duration_sec: 444 },
+  { youtubeId: "XLJCtZK0x5M", title: "Beedi", artist: "Sunidhi Chauhan, Sukhwinder Singh", duration_sec: 240 },
+  { youtubeId: "4dsFQFCvVGU", title: "Kajra Re", artist: "Alisha Chinai, Javed Ali, Shankar Mahadevan", duration_sec: 300 },
+  { youtubeId: "SS3lIQdKP-A", title: "Masakali", artist: "Mohit Chauhan", duration_sec: 270 },
+  { youtubeId: "9a4izd3Rvdw", title: "Challa", artist: "Rabbi Shergill", duration_sec: 311 },
+  { youtubeId: "GmCn31pq8i0", title: "Ghanan Ghanan", artist: "A. R. Rahman, Udit Narayan, Alka Yagnik", duration_sec: 280 },
+  { youtubeId: "xwwAVRyNmgQ", title: "Jai Ho", artist: "Sukhwinder Singh, A. R. Rahman", duration_sec: 260 },
+  { youtubeId: "2uUmHTgT65I", title: "Dhoom Machale", artist: "Sunidhi Chauhan", duration_sec: 240 },
+  { youtubeId: "Jn5hsfbhWx4", title: "Munni Badnaam Hui", artist: "Mamta Sharma", duration_sec: 250 },
+  { youtubeId: "ZTmF2v59CtI", title: "Sheila Ki Jawani", artist: "Sunidhi Chauhan, Vishal Dadlani", duration_sec: 260 },
+  { youtubeId: "zE7Pwgl6sLA", title: "Fevicol Se", artist: "Wajid, Mamta Sharma", duration_sec: 280 },
+  { youtubeId: "ruEQPQX90fI", title: "Character Dheela", artist: "Neeraj Shridhar, Amrita Kak", duration_sec: 240 },
+  { youtubeId: "l_MyUGq7pgs", title: "Malhari", artist: "Vishal Dadlani", duration_sec: 240 },
+  { youtubeId: "_KhQT-LGb-4", title: "Aankh Marey", artist: "Mika Singh, Neha Kakkar, Kumar Sanu", duration_sec: 229 },
+  { youtubeId: "HoCwa6gnmM0", title: "Nashe Si Chadh Gayi", artist: "Arijit Singh", duration_sec: 228 },
+  { youtubeId: "59mHbOOYY0E", title: "Hookah Bar", artist: "Himesh Reshammiya", duration_sec: 250 },
+  { youtubeId: "1tVL11ULjYY", title: "The Humma Song", artist: "A. R. Rahman, Badshah, Tanishk", duration_sec: 180 },
 ]);
 
 const dhabaTamil = tracks([
@@ -71,9 +99,23 @@ const hostelHindi = tracks([
   { youtubeId: "mt9xg0mmt28", title: "Tum Se Hi", artist: "Mohit Chauhan", duration_sec: 258 },
   { youtubeId: "lbCRtrrMvSw", title: "Give Me Some Sunshine", artist: "Suraj Jagan, Sharman Joshi", duration_sec: 255 },
   { youtubeId: "T94PHkuydcw", title: "Kun Faya Kun", artist: "A. R. Rahman, Javed Ali, Mohit Chauhan", duration_sec: 473 },
-  { youtubeId: "6w67NOaRe-w", title: "Ilahi", artist: "Arijit Singh", duration_sec: 204 },
   { youtubeId: "jHNNMj5bNQw", title: "Kabira", artist: "Rekha Bhardwaj, Arijit Singh", duration_sec: 230 },
+  { youtubeId: "2mWaqsC3U7k", title: "Phir Se Ud Chala", artist: "Mohit Chauhan", duration_sec: 270 },
+  { youtubeId: "p9DQINKZxWE", title: "Sadda Haq", artist: "Mohit Chauhan", duration_sec: 300 },
+  { youtubeId: "7PzwOiW8-n0", title: "Aal Izz Well", artist: "Sonu Nigam, Shaan, Swanand Kirkire", duration_sec: 273 },
+  { youtubeId: "ewvddSUEONQ", title: "Behti Hawa Sa Tha Woh", artist: "Shaan, Shantanu Moitra", duration_sec: 300 },
+  { youtubeId: "fSS_R91Nimw", title: "Iktara", artist: "Kavita Seth, Amitabh Bhattacharya", duration_sec: 250 },
   { youtubeId: "ttIKsnxPrMY", title: "Nadaan Parinde", artist: "Mohit Chauhan", duration_sec: 300 },
+  { youtubeId: "V056WNg3ECo", title: "Zoobi Doobi", artist: "Sonu Nigam, Shreya Ghoshal", duration_sec: 240 },
+  { youtubeId: "2Z0Put0teCM", title: "Senorita", artist: "Farhan Akhtar, Hrithik Roshan, Abhay Deol", duration_sec: 230 },
+  { youtubeId: "EiItLWWxgOI", title: "Pani Da Rang", artist: "Ayushmann Khurrana", duration_sec: 240 },
+  { youtubeId: "3EfX3kAM1Ks", title: "Yeh Dooriyan", artist: "Mohit Chauhan", duration_sec: 280 },
+  { youtubeId: "n0PoVxBMUyE", title: "Jaane Kyun", artist: "Vishal-Shekhar", duration_sec: 240 },
+  { youtubeId: "cmMiyZaSELo", title: "Khuda Jaane", artist: "KK, Shilpa Rao", duration_sec: 280 },
+  { youtubeId: "JBCx0QyP8VQ", title: "Pehli Nazar Mein", artist: "Atif Aslam", duration_sec: 260 },
+  { youtubeId: "rTuxUAuJRyY", title: "Tera Hone Laga Hoon", artist: "Atif Aslam, Alisha Chinai", duration_sec: 260 },
+  { youtubeId: "2drIKUOCZxU", title: "Ajab Si", artist: "KK", duration_sec: 250 },
+  { youtubeId: "9coA7bcpJII", title: "Dil Chahta Hai", artist: "Shankar Mahadevan", duration_sec: 268 },
 ]);
 
 const hostelTamil = tracks([
@@ -94,12 +136,26 @@ const hostelTelugu = tracks([
 
 /** STD booth — long-distance love, waiting on the line */
 const boothHindi = tracks([
-  { youtubeId: "Umqb9KENgmk", title: "Tum Hi Ho", artist: "Arijit Singh", duration_sec: 262 },
-  { youtubeId: "sK7riqg2mr4", title: "Agar Tum Saath Ho", artist: "Arijit Singh, Alka Yagnik", duration_sec: 341 },
-  { youtubeId: "OMoU0Pfibc4", title: "Tere Naam", artist: "Udit Narayan, Alka Yagnik", duration_sec: 282 },
-  { youtubeId: "-Hb2DeHvvEg", title: "Tujhe Bhula Diya", artist: "Mohit Chauhan, Shekhar Ravjiani, Shruti Pathak", duration_sec: 258 },
-  { youtubeId: "cNV5hLSa9H8", title: "Tujhe Dekha Toh", artist: "Lata Mangeshkar, Kumar Sanu", duration_sec: 303 },
-  { youtubeId: "N0jnLZxYwYc", title: "Mujhse Mohabbat Ka Izhaar", artist: "Kumar Sanu, Alka Yagnik", duration_sec: 300 },
+  { youtubeId: "IJq0yyWug1k", title: "Tum Hi Ho", artist: "Arijit Singh", duration_sec: 262 },
+  { youtubeId: "6SGRn9OHtFY", title: "Agar Tum Saath Ho", artist: "Arijit Singh, Alka Yagnik", duration_sec: 341 },
+  { youtubeId: "-Hb2DeHvvEg", title: "Tujhe Bhula Diya", artist: "Mohit Chauhan, Shekhar Ravjiani", duration_sec: 258 },
+  { youtubeId: "g0eO74UmRBs", title: "Kal Ho Naa Ho", artist: "Sonu Nigam", duration_sec: 300 },
+  { youtubeId: "284Ov7ysmfA", title: "Channa Mereya", artist: "Arijit Singh", duration_sec: 289 },
+  { youtubeId: "H2f7MZaw3Yo", title: "Samjhawan", artist: "Arijit Singh, Shreya Ghoshal", duration_sec: 269 },
+  { youtubeId: "cs1e0fRyI18", title: "Hawayein", artist: "Arijit Singh", duration_sec: 289 },
+  { youtubeId: "VOLKJJvfAbg", title: "Bekhayali", artist: "Sachet Tandon", duration_sec: 250 },
+  { youtubeId: "zlt38OOqwDc", title: "Raabta", artist: "Arijit Singh", duration_sec: 240 },
+  { youtubeId: "jAUSF4_ygJg", title: "Aas Paas Hai Khuda", artist: "Rahat Fateh Ali Khan", duration_sec: 280 },
+  { youtubeId: "MJyKN-8UncM", title: "Shayad", artist: "Arijit Singh", duration_sec: 240 },
+  { youtubeId: "Qdz5n1Xe5Qo", title: "Tera Ban Jaunga", artist: "Akhil Sachdeva, Tulsi Kumar", duration_sec: 230 },
+  { youtubeId: "1I2aa1sf5NA", title: "Enna Sona", artist: "Arijit Singh", duration_sec: 220 },
+  { youtubeId: "FJ55SHCzt88", title: "Humdard", artist: "Arijit Singh", duration_sec: 260 },
+  { youtubeId: "2ltGXfmI6mk", title: "Muskurane", artist: "Arijit Singh", duration_sec: 280 },
+  { youtubeId: "eHRrZ5DQCV4", title: "Sunn Raha Hai", artist: "Arijit Singh", duration_sec: 280 },
+  { youtubeId: "pkzOBl1p7y4", title: "Jeene Laga Hoon", artist: "Atif Aslam, Shreya Ghoshal", duration_sec: 240 },
+  { youtubeId: "5gwy0gcjIkI", title: "Tere Sang Yaara", artist: "Atif Aslam", duration_sec: 250 },
+  { youtubeId: "-fWejtOkCYs", title: "Hamari Adhuri Kahani", artist: "Arijit Singh", duration_sec: 280 },
+  { youtubeId: "6FURuLYrR_Q", title: "Ae Dil Hai Mushkil", artist: "Arijit Singh", duration_sec: 270 },
 ]);
 
 const boothTamil = tracks([
@@ -121,11 +177,25 @@ const boothTelugu = tracks([
 /** Night state bus — window-seat melancholy, highway wind */
 const busHindi = tracks([
   { youtubeId: "6w67NOaRe-w", title: "Ilahi", artist: "Arijit Singh", duration_sec: 204 },
-  { youtubeId: "8HDTS80dlr4", title: "Patakha Guddi", artist: "Nooran Sisters, A. R. Rahman", duration_sec: 249 },
-  { youtubeId: "ttIKsnxPrMY", title: "Nadaan Parinde", artist: "Mohit Chauhan", duration_sec: 300 },
-  { youtubeId: "9yT4F8hzykY", title: "Chaiyya Chaiyya", artist: "Sukhwinder Singh, Sapna Awasthi", duration_sec: 416 },
-  { youtubeId: "jHNNMj5bNQw", title: "Kabira", artist: "Rekha Bhardwaj, Arijit Singh", duration_sec: 230 },
   { youtubeId: "QYO6AlxiRE4", title: "Subhanallah", artist: "Sreeram, Shilpa Rao", duration_sec: 206 },
+  { youtubeId: "k6BnSIs3XUQ", title: "Phir Le Aya Dil", artist: "Arijit Singh", duration_sec: 280 },
+  { youtubeId: "4tiVPuLbbHg", title: "Yeh Jo Des Hai Tera", artist: "A. R. Rahman", duration_sec: 300 },
+  { youtubeId: "g62J-8nV5FI", title: "Challa", artist: "Romy, Vivek Hariharan", duration_sec: 311 },
+  { youtubeId: "AEIVhBS6baE", title: "Gerua", artist: "Arijit Singh, Antara Mitra", duration_sec: 280 },
+  { youtubeId: "nJZcbidTutE", title: "Sooraj Dooba Hain", artist: "Arijit Singh, Aditi Singh Sharma", duration_sec: 230 },
+  { youtubeId: "7mTDBsdfw88", title: "Safarnama", artist: "Lucky Ali", duration_sec: 240 },
+  { youtubeId: "FFpgYjL2aJo", title: "Luka Chuppi", artist: "Lata Mangeshkar, A. R. Rahman", duration_sec: 300 },
+  { youtubeId: "ru_5PA8cwkE", title: "Mitwa", artist: "Shafqat Amanat Ali, Shankar Mahadevan", duration_sec: 361 },
+  { youtubeId: "Ezsb5afVXQQ", title: "Ud-daa Punjab", artist: "Vishal Dadlani, Amit Trivedi", duration_sec: 240 },
+  { youtubeId: "cyKZXbxx2lc", title: "Ikk Kudi", artist: "Shahid Mallya", duration_sec: 250 },
+  { youtubeId: "BKx_B1VZ2kw", title: "Ae Watan", artist: "Sunidhi Chauhan", duration_sec: 230 },
+  { youtubeId: "56ZzM4mz4yY", title: "Dil Dhadakne Do", artist: "Shankar-Ehsaan-Loy", duration_sec: 240 },
+  { youtubeId: "R0XjwtP_iTY", title: "Khaabon Ke Parinday", artist: "Mohit Chauhan, Alyssa Mendonsa", duration_sec: 240 },
+  { youtubeId: "GtNrQy90Ih4", title: "Saibo", artist: "Shreya Ghoshal, Tochi Raina", duration_sec: 240 },
+  { youtubeId: "neIYLnOHkpw", title: "Bhaag Milkha Bhaag", artist: "Arif Lohar, Shankar Mahadevan", duration_sec: 280 },
+  { youtubeId: "bnqLzCsffwY", title: "Chak De India", artist: "Sukhwinder Singh", duration_sec: 270 },
+  { youtubeId: "YKcmMmJlKNk", title: "Manjha", artist: "Mohan Kannan", duration_sec: 260 },
+  { youtubeId: "iEJPDYrLtsI", title: "Ishq Shava", artist: "Raghav Mathur, Shilpa Rao", duration_sec: 250 },
 ]);
 
 const busTamil = tracks([
@@ -144,14 +214,28 @@ const busTelugu = tracks([
   { youtubeId: "wFAj0pW6xX0", title: "Ramuloo Ramulaa", artist: "Anurag Kulkarni, Mangli", duration_sec: 251 },
 ]);
 
-/** Street baraat — dhol, mehndi, shaadi floor */
+/** Gujarati Garba — dandiya, dhol, Navratri night */
 const baraatHindi = tracks([
-  { youtubeId: "-bNwqXvMuB8", title: "Mehndi Laga Ke Rakhna", artist: "Lata Mangeshkar, Udit Narayan", duration_sec: 280 },
-  { youtubeId: "cLIQzxgFeNE", title: "Nagada Sang Dhol", artist: "Shreya Ghoshal, Osman Mir", duration_sec: 208 },
-  { youtubeId: "udra3Mfw2oo", title: "London Thumakda", artist: "Labh Janjua, Sonu Kakkar, Neha Kakkar", duration_sec: 215 },
-  { youtubeId: "caoGNx1LF2Q", title: "Ghagra", artist: "Vishal Dadlani, Reckless", duration_sec: 302 },
-  { youtubeId: "0WtRNGubWGA", title: "Balam Pichkari", artist: "Vishal Dadlani, Shalmali Kholgade", duration_sec: 288 },
-  { youtubeId: "v7K4vGYL9zI", title: "Khalibali", artist: "Shivam Pathak, Shail Hada", duration_sec: 234 },
+  { youtubeId: "4a25J3p0kVI", title: "Dholi Taro", artist: "Kavita Krishnamurthy, Vinod Rathod", duration_sec: 280 },
+  { youtubeId: "3X7x4Ye-tqo", title: "Nagada Sang Dhol", artist: "Shreya Ghoshal, Osman Mir", duration_sec: 208 },
+  { youtubeId: "xJsvTCMg0qA", title: "Mor Bani Thanghat Kare", artist: "Osman Mir, Aditi Paul", duration_sec: 240 },
+  { youtubeId: "BzcKINXf-rs", title: "Chogada", artist: "Darshan Raval, Asees Kaur", duration_sec: 250 },
+  { youtubeId: "rz1hAo3Hiy4", title: "Dholida", artist: "Neha Kakkar, Udit Narayan, Palak Muchhal", duration_sec: 240 },
+  { youtubeId: "msSE3WK243M", title: "Sanedo", artist: "Darshan Raval, Raja Hasan", duration_sec: 230 },
+  { youtubeId: "9LtJYw1eY30", title: "Kamariya", artist: "Darshan Raval, Aastha Gill", duration_sec: 200 },
+  { youtubeId: "Rbz1qFlRL_Y", title: "Maine Payal Hai Chhankai", artist: "Falguni Pathak", duration_sec: 280 },
+  { youtubeId: "Xna3I11v9Vs", title: "Chudi Jo Khanki", artist: "Falguni Pathak", duration_sec: 260 },
+  { youtubeId: "4V2SU8LMXxo", title: "Meri Chunar Udd Udd Jaye", artist: "Falguni Pathak", duration_sec: 270 },
+  { youtubeId: "PUKYPjz6g-U", title: "Yaad Piya Ki Aane Lagi", artist: "Falguni Pathak", duration_sec: 280 },
+  { youtubeId: "hNAvRwuamfA", title: "Indhana Winva", artist: "Falguni Pathak", duration_sec: 260 },
+  { youtubeId: "tTfF5klskmo", title: "Radha Ne Shyam Mali Jashe", artist: "Sachin-Jigar, Shruti Pathak", duration_sec: 240 },
+  { youtubeId: "6MpjP4w8Gtk", title: "Tara Vina Shyam", artist: "Atul Purohit", duration_sec: 300 },
+  { youtubeId: "pMFT_6AF6vA", title: "Ude Re Gulaal", artist: "Kailash Kher", duration_sec: 280 },
+  { youtubeId: "2pHEAyOCQx4", title: "Jai Jai Garvi Gujarat", artist: "Parthiv Gohil", duration_sec: 240 },
+  { youtubeId: "ccqg6e2rfLU", title: "Gori Radha Ne Kalo Kaan", artist: "Kirtidan Gadhvi", duration_sec: 240 },
+  { youtubeId: "Jv8KRwF1zQs", title: "Moti Veraana", artist: "Amit Trivedi, Osman Mir", duration_sec: 250 },
+  { youtubeId: "rH9D6EErmWw", title: "Jantar Vage", artist: "Kirtidan Gadhvi", duration_sec: 240 },
+  { youtubeId: "4mKvTgpcrLI", title: "He Odhaji", artist: "Aishwarya Majmudar", duration_sec: 240 },
 ]);
 
 const baraatTamil = tracks([
@@ -253,10 +337,10 @@ export const officialRooms: OfficialRoom[] = [
   },
   {
     slug: "baraat-street",
-    name: "Street Baraat Band",
+    name: "Gujarati Garba",
     tagline:
-      "Brass trumpet flourishes, deep dhol beats, petromax gas lamp hiss, festive echo.",
-    emoji: "🥁",
+      "Dandiya sticks clack, dhol thunder, manjira shimmer, temple-light Navratri night.",
+    emoji: "🪔",
     accent: "#c47a52",
     gradientA: "#2e140c",
     gradientB: "#14110f",

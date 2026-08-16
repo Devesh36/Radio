@@ -79,7 +79,7 @@ export default function StudioPage() {
 
     const links = parseLinks(tracksText);
     if (links.length < MIN_CUSTOM_TRACKS) {
-      setError("Paste at least one YouTube link.");
+      setError("Paste at least one YouTube, playlist, or Spotify link.");
       setLoading(false);
       return;
     }
@@ -121,8 +121,8 @@ export default function StudioPage() {
         <h1 className="font-display mt-2 text-3xl text-[#f3e6d8] sm:text-4xl">Build your room</h1>
         <p className="mt-3 text-[#c9b8a8]">
           Start with one YouTube link. Add more later inside the room, up to{" "}
-          {MAX_CUSTOM_TRACKS} songs. Public rooms stay on a shared radio; yours
-          comes with the full controls.
+          {MAX_CUSTOM_TRACKS} songs. Public rooms already let you skip and pick;
+          yours adds your catalog, chat, and share.
         </p>
         <ProTeaser className="mt-4" />
 
@@ -191,8 +191,8 @@ export default function StudioPage() {
             </div>
           </Field>
           <Field
-            label={`YouTube links (${MIN_CUSTOM_TRACKS}–${MAX_CUSTOM_TRACKS})`}
-            hint="One link per line. Title and artist are filled in for you."
+            label={`Songs (${MIN_CUSTOM_TRACKS}–${MAX_CUSTOM_TRACKS})`}
+            hint="One YouTube video, playlist, Spotify link, or song name per line."
           >
             <textarea
               value={tracksText}

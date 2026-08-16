@@ -5,7 +5,7 @@ export const roomBackdrops = [
   { src: "/images/rooms/hostel-midnight.jpg", label: "Hostel" },
   { src: "/images/rooms/std-booth.jpg", label: "STD booth" },
   { src: "/images/rooms/night-bus.jpg", label: "Night bus" },
-  { src: "/images/rooms/baraat-street.jpg", label: "Baraat" },
+  { src: "/images/rooms/baraat-street.jpg", label: "Garba" },
 ] as const;
 
 export const DEFAULT_BACKDROP = roomBackdrops[0].src;

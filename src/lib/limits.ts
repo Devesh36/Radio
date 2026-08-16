@@ -1,3 +1,3 @@
 export const MAX_CUSTOM_ROOMS = 1;
 export const MIN_CUSTOM_TRACKS = 1;
-export const MAX_CUSTOM_TRACKS = 15;
+export const MAX_CUSTOM_TRACKS = 50;

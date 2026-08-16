@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import YouTube, { type YouTubeEvent, type YouTubePlayer } from "react-youtube";
-import { languages, type LanguageKey } from "@/data/brand";
+import { type LanguageKey } from "@/data/brand";
 import type { RadioState, Track } from "@/lib/types";
 
 const PLAYER_OPTS = {
@@ -70,6 +70,24 @@ function formatTime(sec: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+function splitAddInputs(raw: string): string[] {
+  const trimmed = raw.trim();
+  if (!trimmed) return [];
+  const urls = trimmed.match(/https?:\/\/[^\s]+/gi);
+  if (urls?.length) {
+    const leftover = trimmed
+      .replace(/https?:\/\/[^\s]+/gi, "\n")
+      .split("\n")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    return [...urls, ...leftover];
+  }
+  return trimmed
+    .split("\n")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
 interface RoomPlayerProps {
   roomSlug: string;
   ambienceId: string;
@@ -78,10 +96,10 @@ interface RoomPlayerProps {
   radioSync: RadioState | null;
   onTrackChange?: (track: Track) => void;
   onShare?: () => void;
-  onLanguageChange?: (language: LanguageKey) => void;
-  onAddTrack?: (url: string) => Promise<Track>;
+  onAddTrack?: (url: string) => Promise<Track[]>;
   onRemoveTrack?: (youtubeId: string) => Promise<void>;
   radioLocked?: boolean;
+  liveSyncEnabled?: boolean;
 }
 
 export function RoomPlayer({
@@ -92,10 +110,10 @@ export function RoomPlayer({
   radioSync,
   onTrackChange,
   onShare,
-  onLanguageChange,
   onAddTrack,
   onRemoveTrack,
   radioLocked = false,
+  liveSyncEnabled = false,
 }: RoomPlayerProps) {
   const [mounted, setMounted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -368,6 +386,7 @@ export function RoomPlayer({
   };
 
   const joinLive = () => {
+    if (!liveSyncEnabled) return;
     setLiveRadio(true);
     liveRadioRef.current = true;
     lastSyncKey.current = "";
@@ -381,13 +400,13 @@ export function RoomPlayer({
     setAdding(true);
     setAddError("");
     try {
-      const links = raw.split(/[\s,]+/).filter(Boolean);
-      let last: Track | null = null;
+      const links = splitAddInputs(raw);
+      const added: Track[] = [];
       for (const link of links) {
-        last = await onAddTrack(link);
+        added.push(...(await onAddTrack(link)));
       }
       setAddUrl("");
-      if (last) playTrack(last, 0, false);
+      if (added[0]) playTrack(added[0], 0, false);
     } catch (error) {
       setAddError(error instanceof Error ? error.message : "Couldn’t add that link");
     } finally {
@@ -452,29 +471,7 @@ export function RoomPlayer({
                       Share
                     </button>
                   )}
-                  {onLanguageChange && (
-                    <div className="hidden items-center gap-1 sm:flex">
-                      {(Object.keys(languages) as LanguageKey[]).map((key) => (
-                        <button
-                          key={key}
-                          type="button"
-                          onClick={() => onLanguageChange(key)}
-                          className="rounded-full px-2 py-1 text-[10px] uppercase tracking-wider"
-                          style={{
-                            color: language === key ? "#c47a52" : "#c9b8a8",
-                            backgroundColor: language === key ? "rgba(196,122,82,0.16)" : "transparent",
-                          }}
-                        >
-                          {languages[key].code}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {radioLocked ? (
-                    <span className="hidden shrink-0 text-[11px] uppercase tracking-[0.16em] text-[#c47a52] sm:block">
-                      Live
-                    </span>
-                  ) : (
+                  {liveSyncEnabled && (
                     <button
                       onClick={joinLive}
                       className="hidden shrink-0 text-[11px] uppercase tracking-[0.16em] sm:block"
@@ -572,7 +569,7 @@ export function RoomPlayer({
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-xs uppercase tracking-widest text-[#c47a52]">
-                          {languages[language].label} catalog
+                          Room catalog
                         </p>
                         <h3 className="font-display text-xl text-[#f3e6d8] sm:text-2xl">
                           {radioLocked ? "On the radio" : "Pick a song"}
@@ -584,7 +581,7 @@ export function RoomPlayer({
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        {!radioLocked && (
+                        {liveSyncEnabled && (
                           <button
                             type="button"
                             onClick={joinLive}
@@ -602,27 +599,6 @@ export function RoomPlayer({
                         </button>
                       </div>
                     </div>
-                    {onLanguageChange && (
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        {(Object.keys(languages) as LanguageKey[]).map((key) => (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => onLanguageChange(key)}
-                            className="rounded-xl px-2 py-2 text-center text-xs"
-                            style={{
-                              backgroundColor: language === key ? "rgba(196,122,82,0.18)" : "#1f1a17",
-                              color: language === key ? "#c47a52" : "#c9b8a8",
-                            }}
-                          >
-                            {languages[key].native}
-                            <span className="mt-0.5 block text-[10px] uppercase tracking-wider">
-                              {languages[key].label}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
@@ -634,7 +610,7 @@ export function RoomPlayer({
                         <input
                           value={addUrl}
                           onChange={(e) => setAddUrl(e.target.value)}
-                          placeholder="Paste a YouTube link to add…"
+                          placeholder="YouTube video, playlist, Spotify, or a song name…"
                           className="field-input min-w-0 flex-1 py-2.5 text-sm"
                         />
                         <button
