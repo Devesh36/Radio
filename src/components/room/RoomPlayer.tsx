@@ -7,20 +7,42 @@ import { type LanguageKey } from "@/data/brand";
 import { useBackgroundPlayback } from "@/hooks/useBackgroundPlayback";
 import type { RadioState, Track } from "@/lib/types";
 
-const PLAYER_OPTS = {
+const PLAYER_VARS = {
+  autoplay: 1,
+  controls: 0,
+  disablekb: 1,
+  fs: 0,
+  modestbranding: 1,
+  rel: 0,
+  playsinline: 1,
+  origin: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
+};
+
+const HIDDEN_OPTS = {
   height: "1",
   width: "1",
-  playerVars: {
-    autoplay: 1,
-    controls: 0,
-    disablekb: 1,
-    fs: 0,
-    modestbranding: 1,
-    rel: 0,
-    playsinline: 1,
-    origin: typeof window !== "undefined" ? window.location.origin : "http://localhost:3000",
-  },
+  playerVars: PLAYER_VARS,
 };
+
+const MUSIC_OPTS = {
+  height: "180",
+  width: "320",
+  playerVars: PLAYER_VARS,
+};
+
+function prepareMediaIframe(player: YouTubePlayer) {
+  try {
+    const iframe = player.getIframe?.();
+    if (!iframe) return;
+    iframe.setAttribute(
+      "allow",
+      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share",
+    );
+    iframe.setAttribute("allowfullscreen", "true");
+  } catch {
+    // ignore
+  }
+}
 
 function IconPlay() {
   return (
@@ -270,6 +292,7 @@ export function RoomPlayer({
   const onMusicReady = (event: YouTubeEvent) => {
     musicRef.current = event.target;
     musicReady.current = true;
+    prepareMediaIframe(event.target);
     try {
       event.target.setVolume(musicVolume);
       event.target.unMute();
@@ -492,6 +515,18 @@ export function RoomPlayer({
                 style={{ backgroundColor: "rgba(12,10,9,0.82)", backdropFilter: "blur(18px)" }}
               >
                 <div className="flex items-center gap-2 sm:gap-3">
+                  {bootIdRef.current && (
+                    <div className="dock-video" aria-hidden="true">
+                      <YouTube
+                        videoId={bootIdRef.current}
+                        opts={MUSIC_OPTS}
+                        className="dock-video-player"
+                        iframeClassName="dock-video-frame"
+                        onReady={onMusicReady}
+                        onStateChange={onMusicStateChange}
+                      />
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-[#f3e6d8]">{track.title}</p>
                     <p className="truncate text-xs text-[#c9b8a8]">{track.artist}</p>
@@ -732,20 +767,12 @@ export function RoomPlayer({
   return (
     <>
       <div className="hidden-player" aria-hidden="true">
-        {bootIdRef.current && (
-          <YouTube
-            videoId={bootIdRef.current}
-            opts={PLAYER_OPTS}
-            onReady={onMusicReady}
-            onStateChange={onMusicStateChange}
-          />
-        )}
         <YouTube
           videoId={ambienceId}
           opts={{
-            ...PLAYER_OPTS,
+            ...HIDDEN_OPTS,
             playerVars: {
-              ...PLAYER_OPTS.playerVars,
+              ...PLAYER_VARS,
               loop: 1,
               playlist: ambienceId,
             },
