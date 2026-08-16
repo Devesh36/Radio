@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import YouTube, { type YouTubeEvent, type YouTubePlayer } from "react-youtube";
 import { type LanguageKey } from "@/data/brand";
+import { useBackgroundPlayback } from "@/hooks/useBackgroundPlayback";
 import type { RadioState, Track } from "@/lib/types";
 
 const PLAYER_OPTS = {
@@ -135,6 +136,7 @@ export function RoomPlayer({
   const musicReady = useRef(false);
   const lastSyncKey = useRef("");
   const ignorePauseRef = useRef(false);
+  const userPausedRef = useRef(false);
   const liveRadioRef = useRef(radioLocked);
   const currentTrackRef = useRef<Track | null>(radioSync?.track ?? playlist[0] ?? null);
   const bootIdRef = useRef(radioSync?.track.youtubeId ?? playlist[0]?.youtubeId ?? "");
@@ -176,6 +178,7 @@ export function RoomPlayer({
   const playTrack = useCallback(
     (track: Track, startSeconds = 0, fromRadio = false) => {
       if (radioLocked && !fromRadio) return;
+      userPausedRef.current = false;
       const sameVideo = currentTrackRef.current?.youtubeId === track.youtubeId;
       if (!fromRadio) {
         setLiveRadio(false);
@@ -306,19 +309,18 @@ export function RoomPlayer({
     }
   };
 
-  const currentIndex = useMemo(
-    () => playlist.findIndex((t) => t.youtubeId === currentTrack?.youtubeId),
-    [playlist, currentTrack],
+  const skip = useCallback(
+    (dir: -1 | 1) => {
+      if (radioLocked || !playlist.length) return;
+      const idx = playlist.findIndex((t) => t.youtubeId === currentTrackRef.current?.youtubeId);
+      const i = idx >= 0 ? idx : 0;
+      const next = playlist[(i + dir + playlist.length) % playlist.length];
+      playTrack(next, 0, false);
+    },
+    [playlist, playTrack, radioLocked],
   );
 
-  const skip = (dir: -1 | 1) => {
-    if (radioLocked || !playlist.length) return;
-    const idx = currentIndex >= 0 ? currentIndex : 0;
-    const next = playlist[(idx + dir + playlist.length) % playlist.length];
-    playTrack(next, 0, false);
-  };
-
-  const syncFromNowPlaying = () => {
+  const syncFromNowPlaying = useCallback(() => {
     fetch(`/api/rooms/${roomSlug}/now?lang=${language}`)
       .then((r) => r.json())
       .then((data) => {
@@ -327,17 +329,44 @@ export function RoomPlayer({
         playTrack(data.track, data.offsetSec ?? 0, true);
       })
       .catch(() => undefined);
-  };
+  }, [language, playTrack, roomSlug]);
+
+  const resumePlayback = useCallback(() => {
+    userPausedRef.current = false;
+    try {
+      musicRef.current?.playVideo();
+      ambienceRef.current?.playVideo();
+      setIsPlaying(true);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const pausePlayback = useCallback(() => {
+    userPausedRef.current = true;
+    try {
+      musicRef.current?.pauseVideo();
+      ambienceRef.current?.pauseVideo();
+      setIsPlaying(false);
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const onMusicStateChange = (event: YouTubeEvent) => {
     if (event.data === 1) {
       ignorePauseRef.current = false;
+      userPausedRef.current = false;
       setIsPlaying(true);
       return;
     }
     if (event.data === 3) return;
     if (event.data === 2) {
       if (ignorePauseRef.current) return;
+      if (!userPausedRef.current && document.visibilityState === "hidden") {
+        resumePlayback();
+        return;
+      }
       setIsPlaying(false);
       return;
     }
@@ -350,33 +379,44 @@ export function RoomPlayer({
     }
   };
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (!musicRef.current) return;
     if (isPlaying) {
-      musicRef.current.pauseVideo();
-      ambienceRef.current?.pauseVideo();
-      setIsPlaying(false);
+      pausePlayback();
     } else if (radioLocked) {
+      userPausedRef.current = false;
       lastSyncKey.current = "";
       applyRadioSync();
       syncFromNowPlaying();
       ambienceRef.current?.playVideo();
     } else {
-      musicRef.current.playVideo();
-      ambienceRef.current?.playVideo();
-      setIsPlaying(true);
+      resumePlayback();
     }
-  };
+  }, [applyRadioSync, isPlaying, pausePlayback, radioLocked, resumePlayback, syncFromNowPlaying]);
 
-  const seek = (value: number) => {
-    if (radioLocked) return;
-    setElapsed(value);
-    try {
-      musicRef.current?.seekTo(value, true);
-    } catch {
-      // ignore
-    }
-  };
+  const seek = useCallback(
+    (value: number) => {
+      if (radioLocked) return;
+      setElapsed(value);
+      try {
+        musicRef.current?.seekTo(value, true);
+      } catch {
+        // ignore
+      }
+    },
+    [radioLocked],
+  );
+
+  useBackgroundPlayback({
+    isPlaying,
+    track: currentTrack,
+    duration,
+    elapsed,
+    resume: resumePlayback,
+    pause: pausePlayback,
+    skip,
+    seek,
+  });
 
   const seekFromClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (duration <= 0) return;
