@@ -32,31 +32,30 @@ export default function HomePage() {
           />
           <div className="relative z-10 flex min-h-[calc(100svh-4.5rem)] flex-col justify-center px-4 py-16 pb-20 sm:px-5 sm:py-20 md:px-[5vw]">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#c47a52] sm:text-xs sm:tracking-[0.25em]">
-              Indian nostalgia · Spatial audio · Live rooms
+              Night radio · Kulhad steam · Open seats
             </p>
             <h1 className="font-display mt-4 max-w-3xl text-[2.5rem] leading-[1.08] text-[#f3e6d8] sm:text-5xl md:text-7xl">
-              Which room is
+              Come sit.
               <br />
-              your childhood?
+              The tape is still running.
             </h1>
             <p className="mt-5 max-w-xl text-base text-[#c9b8a8] sm:mt-6 sm:text-lg">
-              We took the settings that defined growing up in 90s India — the chai
-              tapri, the STD booth, the garba night — and turned them into living
-              audio spaces. Step inside. Put your headphones on.
+              Six rooms, each with its own night — rain on a tapri roof, a yellow
+              booth, a Navratri circle. Pick a seat. The song is already on.
             </p>
             <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:gap-4">
               <ScrollToRooms
                 className="rounded-full px-6 py-3 text-center font-semibold text-white transition hover:brightness-110"
                 style={{ backgroundColor: "#c47a52" }}
               >
-                Step into a room ↓
+                Browse rooms ↓
               </ScrollToRooms>
               <Link
                 href="/studio"
                 className="rounded-full px-6 py-3 text-center text-[#f3e6d8] transition hover:border-[#c47a52]"
                 style={{ border: "1px solid #c47a52", backgroundColor: "#1f1a17" }}
               >
-                Build your own →
+                Make a room →
               </Link>
             </div>
           </div>
@@ -77,11 +76,11 @@ export default function HomePage() {
               Room catalog
             </span>
             <h2 className="font-display mt-2 text-3xl text-[#f3e6d8] sm:text-4xl md:text-5xl">
-              Choose your setting
+              Six nights, still on
             </h2>
             <p className="mt-3 max-w-xl text-[#c9b8a8]">
-              Every room is a live space — music playing, people listening. The door
-              is always open.
+              Walk into any of them. Skip if you want. Someone else may already be
+              listening in the same dark.
             </p>
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {officialRooms.map((room) => (

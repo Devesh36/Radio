@@ -5,6 +5,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createBrowserSupabase } from "@/lib/supabase/client";
 import type { LanguageKey } from "@/data/brand";
 import type { PresenceMember, Track } from "@/lib/types";
+import { LIVE_CAPACITY } from "@/lib/limits";
 import { isSlug } from "@/lib/validate";
 
 function sessionId() {
@@ -75,7 +76,10 @@ export function useRoomPresence({
   enabled: boolean;
 }) {
   const [members, setMembers] = useState<PresenceMember[]>([]);
+  const [liveCount, setLiveCount] = useState(0);
+  const [isFull, setIsFull] = useState(false);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const liveRef = useRef<RealtimeChannel | null>(null);
   const sessionRef = useRef("");
   const trackRef = useRef(track);
 
@@ -91,10 +95,17 @@ export function useRoomPresence({
     const id = sessionId();
     sessionRef.current = id;
 
+    const markFull = () => setIsFull(true);
+
     const channel = supabase.channel(`room:${roomSlug}:presence`, {
       config: { presence: { key: id } },
     });
     channelRef.current = channel;
+
+    const live = supabase.channel("baithak:live", {
+      config: { presence: { key: id } },
+    });
+    liveRef.current = live;
 
     channel
       .on("presence", { event: "sync" }, () => {
@@ -104,11 +115,27 @@ export function useRoomPresence({
         if (status === "SUBSCRIBED") {
           await channel.track(payload(id, displayName, language, trackRef.current));
         }
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") markFull();
+      });
+
+    live
+      .on("presence", { event: "sync" }, () => {
+        const n = Object.keys(live.presenceState()).length;
+        setLiveCount(n);
+        setIsFull(n >= LIVE_CAPACITY);
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await live.track({ sessionId: id, room: roomSlug });
+        }
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") markFull();
       });
 
     return () => {
       channelRef.current = null;
+      liveRef.current = null;
       supabase.removeChannel(channel);
+      supabase.removeChannel(live);
     };
   }, [roomSlug, displayName, language, enabled]);
 
@@ -120,7 +147,10 @@ export function useRoomPresence({
   }, [displayName, language, track?.youtubeId, track?.title, track?.artist]);
 
   return {
-    count: members.length || (enabled ? 1 : 0),
+    count: members.length || (enabled && !isFull ? 1 : members.length),
+    liveCount,
+    capacity: LIVE_CAPACITY,
+    isFull,
     members,
   };
 }

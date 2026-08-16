@@ -9,7 +9,7 @@ import { RoomChat } from "@/components/room/RoomChat";
 import { RoomRipples } from "@/components/room/RoomRipples";
 import { RoomOnboarding } from "@/components/room/RoomOnboarding";
 import { RoomPlayer } from "@/components/room/RoomPlayer";
-import { RoomPresence } from "@/components/room/RoomPresence";
+import { RoomCapacityBanner, RoomPresence } from "@/components/room/RoomPresence";
 import { ShareSheet } from "@/components/room/ShareSheet";
 import { useRoomPresence } from "@/hooks/useRoomPresence";
 import type { OfficialRoom, RadioState, Track } from "@/lib/types";
@@ -221,7 +221,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
 
   const ambienceId = getAmbienceId(room, language);
   const listeningTrack = currentTrack ?? playlist[0] ?? null;
-  const { count, members } = useRoomPresence({
+  const { count, members, capacity, isFull } = useRoomPresence({
     roomSlug: room.slug,
     displayName,
     language,
@@ -249,7 +249,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
         </Link>
         {entered && (
           <div className="min-w-0 flex-1 truncate text-center">
-            <RoomPresence count={count} />
+            <RoomPresence count={count} isFull={isFull} />
           </div>
         )}
         <div className="min-w-0 max-w-[55%] text-right">
@@ -276,10 +276,13 @@ export function RoomExperience({ room }: RoomExperienceProps) {
       {!entered && (
         <RoomOnboarding
           roomName={room.name}
+          requireName={Boolean(room.isCustom)}
           chatEnabled={Boolean(room.isCustom && room.chatEnabled)}
           onComplete={handleEnter}
         />
       )}
+
+      {entered && isFull && <RoomCapacityBanner capacity={capacity} />}
 
       {entered && (
         <>
@@ -300,7 +303,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
           <RoomChat
             roomSlug={room.slug}
             displayName={displayName}
-            enabled={Boolean(room.isCustom && room.chatEnabled)}
+            enabled={Boolean(room.isCustom && room.chatEnabled && !isFull)}
             listeners={members}
           />
         </>

@@ -11,15 +11,25 @@ function getInitialDisplayName(): string {
 interface RoomOnboardingProps {
   roomName: string;
   chatEnabled?: boolean;
+  requireName?: boolean;
   onComplete: (displayName: string) => void;
 }
 
-export function RoomOnboarding({ roomName, chatEnabled = false, onComplete }: RoomOnboardingProps) {
+export function RoomOnboarding({
+  roomName,
+  chatEnabled = false,
+  requireName = false,
+  onComplete,
+}: RoomOnboardingProps) {
   const [displayName, setDisplayName] = useState(getInitialDisplayName);
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!requireName) {
+      onComplete(`Guest-${Math.floor(Math.random() * 10000)}`);
+      return;
+    }
     const trimmed = displayName.trim();
     if (trimmed.length < 2) {
       setError("At least 2 characters");
@@ -49,20 +59,25 @@ export function RoomOnboarding({ roomName, chatEnabled = false, onComplete }: Ro
         </p>
         <h2 className="font-display mt-2 text-xl text-[#f3e6d8] sm:text-2xl">{roomName}</h2>
         <p className="mt-2 text-sm text-[#c9b8a8]">
-          {chatEnabled
-            ? "Pick a display name for yourself — this is how you’ll show up in chat."
-            : "Pick a display name for yourself."}
+          {requireName
+            ? chatEnabled
+              ? "Pick a display name for yourself — this is how you’ll show up in chat."
+              : "Pick a display name for yourself."
+            : "Put your headphones on and step inside."}
         </p>
 
-        <label className="mt-6 block text-sm text-[#c9b8a8]">Display name</label>
-        <input
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          className="field-input mt-1"
-          maxLength={20}
-        />
-
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        {requireName && (
+          <>
+            <label className="mt-6 block text-sm text-[#c9b8a8]">Display name</label>
+            <input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className="field-input mt-1"
+              maxLength={20}
+            />
+            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+          </>
+        )}
 
         <button
           type="submit"
