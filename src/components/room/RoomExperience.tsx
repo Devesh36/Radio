@@ -113,7 +113,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
     setLanguage("hindi");
     setPlaylist(mergeTracks(room.catalogs.hindi, extras.hindi, removed.hindi));
     setEntered(true);
-    if (room.isCustom) fetchRadio("hindi");
+    fetchRadio("hindi");
   };
 
   const addTrackFromLink = async (url: string) => {
@@ -213,11 +213,11 @@ export function RoomExperience({ room }: RoomExperienceProps) {
   };
 
   useEffect(() => {
-    if (!entered || !room.isCustom) return;
+    if (!entered) return;
     fetchRadio(language);
-    const interval = setInterval(() => fetchRadio(language), 30000);
+    const interval = setInterval(() => fetchRadio(language), 15000);
     return () => clearInterval(interval);
-  }, [entered, language, fetchRadio, room.isCustom]);
+  }, [entered, language, fetchRadio]);
 
   const ambienceId = getAmbienceId(room, language);
   const listeningTrack = currentTrack ?? playlist[0] ?? null;
@@ -298,7 +298,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
             onAddTrack={room.isCustom && isHost ? addTrackFromLink : undefined}
             onRemoveTrack={room.isCustom && isHost ? removeTrackFromCatalog : undefined}
             radioLocked={false}
-            liveSyncEnabled={false}
+            liveSyncEnabled
           />
           <RoomChat
             roomSlug={room.slug}

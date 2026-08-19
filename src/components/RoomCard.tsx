@@ -1,7 +1,13 @@
 import Link from "next/link";
 import type { OfficialRoom } from "@/lib/types";
 
-export function RoomCard({ room }: { room: OfficialRoom }) {
+export function RoomCard({
+  room,
+  listeners = 0,
+}: {
+  room: OfficialRoom;
+  listeners?: number;
+}) {
   return (
     <Link
       href={`/r/${room.slug}`}
@@ -9,13 +15,13 @@ export function RoomCard({ room }: { room: OfficialRoom }) {
       style={{ backgroundColor: "#1f1a17" }}
     >
       <div
-              className="relative h-40 bg-cover bg-center sm:h-44"
+        className="relative h-40 bg-cover bg-center sm:h-44"
         style={{ backgroundImage: `url("${room.imageUrl}")` }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a09] via-[#0c0a09]/40 to-transparent" />
         <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#1f1a17]/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#f3e6d8]">
           <span className="live-pulse inline-block h-1.5 w-1.5 rounded-full bg-red-500" />
-          Live
+          {listeners > 0 ? `${listeners} listening` : "Live"}
         </span>
       </div>
       <div className="p-4">

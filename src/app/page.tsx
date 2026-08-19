@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { RoomCard } from "@/components/RoomCard";
+import { PublicRoomGrid } from "@/components/PublicRoomGrid";
 import { HomeLandingScroll, ScrollToRooms } from "@/components/ScrollToRooms";
 import { ProTeaser } from "@/components/ProTeaser";
 import { StudioFeatureGrid } from "@/components/StudioFeatureGrid";
 import { officialRooms } from "@/data/rooms";
 
 export default function HomePage() {
+  const roomCount = officialRooms.length;
   const tickerItems = officialRooms.map((r) => r.name.split(" ").slice(-2).join(" "));
 
   return (
@@ -40,8 +41,9 @@ export default function HomePage() {
               The tape is still running.
             </h1>
             <p className="mt-5 max-w-xl text-base text-[#c9b8a8] sm:mt-6 sm:text-lg">
-              Six rooms, each with its own night — rain on a tapri roof, a yellow
-              booth, a Navratri circle. Pick a seat. The song is already on.
+              {roomCount} rooms, each with its own night — rain on a tapri roof, a
+              monsoon balcony, a platform lamp, a Tokyo window, a study desk. Pick a
+              seat. The song is already on.
             </p>
             <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:gap-4">
               <ScrollToRooms
@@ -76,17 +78,13 @@ export default function HomePage() {
               Room catalog
             </span>
             <h2 className="font-display mt-2 text-3xl text-[#f3e6d8] sm:text-4xl md:text-5xl">
-              Six nights, still on
+              {roomCount} nights, still on
             </h2>
             <p className="mt-3 max-w-xl text-[#c9b8a8]">
-              Walk into any of them. Skip if you want. Someone else may already be
-              listening in the same dark.
+              Busiest rooms rise to the top. Walk into any of them — skip if you
+              want. Someone else may already be listening in the same dark.
             </p>
-            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {officialRooms.map((room) => (
-                <RoomCard key={room.slug} room={room} />
-              ))}
-            </div>
+            <PublicRoomGrid />
           </div>
         </section>
 

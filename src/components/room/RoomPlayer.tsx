@@ -200,6 +200,7 @@ export function RoomPlayer({
   const playTrack = useCallback(
     (track: Track, startSeconds = 0, fromRadio = false) => {
       if (radioLocked && !fromRadio) return;
+      if (fromRadio && !radioLocked && !liveRadioRef.current) return;
       userPausedRef.current = false;
       const sameVideo = currentTrackRef.current?.youtubeId === track.youtubeId;
       if (!fromRadio) {
@@ -334,7 +335,7 @@ export function RoomPlayer({
 
   const skip = useCallback(
     (dir: -1 | 1) => {
-      if (radioLocked || !playlist.length) return;
+      if (radioLocked || liveRadioRef.current || !playlist.length) return;
       const idx = playlist.findIndex((t) => t.youtubeId === currentTrackRef.current?.youtubeId);
       const i = idx >= 0 ? idx : 0;
       const next = playlist[(i + dir + playlist.length) % playlist.length];
@@ -348,11 +349,12 @@ export function RoomPlayer({
       .then((r) => r.json())
       .then((data) => {
         if (!data?.track) return;
+        if (!liveRadioRef.current && !radioLocked) return;
         lastSyncKey.current = "";
         playTrack(data.track, data.offsetSec ?? 0, true);
       })
       .catch(() => undefined);
-  }, [language, playTrack, roomSlug]);
+  }, [language, playTrack, radioLocked, roomSlug]);
 
   const resumePlayback = useCallback(() => {
     userPausedRef.current = false;
@@ -406,7 +408,7 @@ export function RoomPlayer({
     if (!musicRef.current) return;
     if (isPlaying) {
       pausePlayback();
-    } else if (radioLocked) {
+    } else if (radioLocked || liveRadioRef.current) {
       userPausedRef.current = false;
       lastSyncKey.current = "";
       applyRadioSync();
@@ -419,7 +421,7 @@ export function RoomPlayer({
 
   const seek = useCallback(
     (value: number) => {
-      if (radioLocked) return;
+      if (radioLocked || liveRadioRef.current) return;
       setElapsed(value);
       try {
         musicRef.current?.seekTo(value, true);
@@ -450,11 +452,25 @@ export function RoomPlayer({
 
   const joinLive = () => {
     if (!liveSyncEnabled) return;
+    if (liveRadioRef.current) {
+      setLiveRadio(false);
+      liveRadioRef.current = false;
+      lastSyncKey.current = "";
+      return;
+    }
     setLiveRadio(true);
     liveRadioRef.current = true;
     lastSyncKey.current = "";
     applyRadioSync();
+    syncFromNowPlaying();
   };
+
+  useEffect(() => {
+    if (!liveRadio) return;
+    syncFromNowPlaying();
+    const interval = window.setInterval(syncFromNowPlaying, 12000);
+    return () => window.clearInterval(interval);
+  }, [liveRadio, syncFromNowPlaying]);
 
   const submitAdd = async (event: FormEvent) => {
     event.preventDefault();
@@ -504,6 +520,7 @@ export function RoomPlayer({
 
   const track = currentTrack ?? radioSync?.track ?? null;
   const progress = duration > 0 ? Math.min(100, (elapsed / duration) * 100) : 0;
+  const locked = radioLocked || liveRadio;
 
   const dock =
     track && mounted
@@ -531,6 +548,18 @@ export function RoomPlayer({
                     <p className="truncate text-sm font-semibold text-[#f3e6d8]">{track.title}</p>
                     <p className="truncate text-xs text-[#c9b8a8]">{track.artist}</p>
                   </div>
+                  {liveSyncEnabled && (
+                    <button
+                      type="button"
+                      onClick={joinLive}
+                      className="shrink-0 px-1 py-2 text-[11px] uppercase tracking-[0.16em] hover:text-[#f3e6d8]"
+                      style={{ color: liveRadio ? "#c47a52" : "#c9b8a8" }}
+                      aria-pressed={liveRadio}
+                      aria-label={liveRadio ? "Leave live listen" : "Listen live with the room"}
+                    >
+                      [Live]
+                    </button>
+                  )}
                   <button
                     onClick={() => setPickerOpen(true)}
                     className="shrink-0 px-1 py-2 text-[11px] uppercase tracking-[0.16em] text-[#c9b8a8] hover:text-[#f3e6d8]"
@@ -546,17 +575,8 @@ export function RoomPlayer({
                       Share
                     </button>
                   )}
-                  {liveSyncEnabled && (
-                    <button
-                      onClick={joinLive}
-                      className="hidden shrink-0 text-[11px] uppercase tracking-[0.16em] sm:block"
-                      style={{ color: liveRadio ? "#c47a52" : "#c9b8a8" }}
-                    >
-                      {liveRadio ? "Live" : "Join live"}
-                    </button>
-                  )}
                   <div className="hidden items-center gap-2 sm:flex">
-                    {!radioLocked && (
+                    {!locked && (
                       <button onClick={() => skip(-1)} className="p-1 text-[#c9b8a8]" aria-label="Previous">
                         <IconPrev />
                       </button>
@@ -576,7 +596,7 @@ export function RoomPlayer({
                         </svg>
                       )}
                     </button>
-                    {!radioLocked && (
+                    {!locked && (
                       <button onClick={() => skip(1)} className="p-1 text-[#c9b8a8]" aria-label="Next">
                         <IconNext />
                       </button>
@@ -587,9 +607,9 @@ export function RoomPlayer({
                   <button
                     type="button"
                     onClick={seekFromClick}
-                    disabled={radioLocked}
+                    disabled={locked}
                     className="relative h-4 flex-1 sm:h-[3px] disabled:cursor-default"
-                    aria-label={radioLocked ? "Live progress" : "Seek"}
+                    aria-label={locked ? "Live progress" : "Seek"}
                   >
                     <span className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/20" />
                     <span
@@ -602,7 +622,7 @@ export function RoomPlayer({
                   </span>
                 </div>
                 <div className="mt-0.5 flex items-center justify-center gap-5 sm:hidden">
-                  {!radioLocked && (
+                  {!locked && (
                     <button onClick={() => skip(-1)} className="p-2 text-[#c9b8a8]" aria-label="Previous">
                       <IconPrev />
                     </button>
@@ -622,7 +642,7 @@ export function RoomPlayer({
                       </svg>
                     )}
                   </button>
-                  {!radioLocked && (
+                  {!locked && (
                     <button onClick={() => skip(1)} className="p-2 text-[#c9b8a8]" aria-label="Next">
                       <IconNext />
                     </button>
@@ -649,6 +669,11 @@ export function RoomPlayer({
                         <h3 className="font-display text-xl text-[#f3e6d8] sm:text-2xl">
                           {radioLocked ? "On the radio" : "Pick a song"}
                         </h3>
+                        {liveRadio && !radioLocked && (
+                          <p className="mt-1 text-xs text-[#c9b8a8]">
+                            You’re on Live. Tap any song to leave and play your own.
+                          </p>
+                        )}
                         {radioLocked && (
                           <p className="mt-1 text-xs text-[#c9b8a8]">
                             Everyone here hears the same song. The room changes it.
@@ -660,10 +685,10 @@ export function RoomPlayer({
                           <button
                             type="button"
                             onClick={joinLive}
-                            className="rounded-full px-3 py-1 text-sm sm:hidden"
+                            className="rounded-full px-3 py-1 text-sm"
                             style={{ color: liveRadio ? "#c47a52" : "#c9b8a8" }}
                           >
-                            {liveRadio ? "Live" : "Join live"}
+                            [Live]
                           </button>
                         )}
                         <button
