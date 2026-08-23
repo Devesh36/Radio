@@ -31,7 +31,7 @@ export function RoomCapacityBanner({ capacity }: { capacity: number }) {
     >
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#c47a52]">Capacity full</p>
       <p className="mt-1 text-sm text-[#f3e6d8]">
-        All {capacity} live spots across Baithak are taken. Music still plays here — presence
+        All {capacity} live spots across Radio are taken. Music still plays here — presence
         and chat will return when someone leaves.
       </p>
     </div>

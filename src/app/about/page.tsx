@@ -10,9 +10,9 @@ export default function AboutPage() {
       <main className="prose-page mx-auto max-w-2xl px-4 py-10 sm:px-5 sm:py-16 md:px-[5vw]">
         <h1>What is {brand.name}?</h1>
         <p>
-          {brand.name} is Hindi for a gathering — a living audio space. We build
-          rooms that recreate the feeling of specific places in 90s India — not as
-          museums, but as spaces you can actually sit inside.
+          {brand.name} is a living audio space. We build rooms that recreate the
+          feeling of specific places in 90s India — not as museums, but as nights
+          you can actually sit inside and listen.
         </p>
         <h2>Why nostalgia rooms?</h2>
         <p>

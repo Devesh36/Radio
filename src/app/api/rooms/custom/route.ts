@@ -131,7 +131,7 @@ export async function POST(request: Request) {
   }
 
   if (getOfficialRoom(slug)) {
-    return NextResponse.json({ error: "That URL is already a Baithak room" }, { status: 409 });
+    return NextResponse.json({ error: "That URL is already a Radio room" }, { status: 409 });
   }
 
   const tracks = await resolveTracks(body);

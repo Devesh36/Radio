@@ -1,5 +1,5 @@
 export const brand = {
-  name: "Baithak",
+  name: "Radio",
   tagline: "A network of Indian nostalgia rooms",
   domain: "baithak.app",
   description:

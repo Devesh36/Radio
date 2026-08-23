@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const title = clip(searchParams.get("title") ?? "Now Playing", 52);
   const artist = clip(searchParams.get("artist") ?? "", 42);
-  const room = clip(searchParams.get("room") ?? "Baithak", 28);
+  const room = clip(searchParams.get("room") ?? "Radio", 28);
   const vid = searchParams.get("vid") ?? "";
   const thumb = /^[a-zA-Z0-9_-]{11}$/.test(vid)
     ? `https://img.youtube.com/vi/${vid}/hqdefault.jpg`
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
                 letterSpacing: 1,
               }}
             >
-              baithak.
+              radio.
             </div>
             <div
               style={{

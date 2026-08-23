@@ -37,8 +37,8 @@ function parseLinks(value: string) {
 
 export default function StudioPage() {
   const router = useRouter();
-  const [slug, setSlug] = useState("my-baithak");
-  const [title, setTitle] = useState("My Baithak");
+  const [slug, setSlug] = useState("my-radio");
+  const [title, setTitle] = useState("My Radio");
   const [tagline, setTagline] = useState("Listen");
   const [backgroundUrl, setBackgroundUrl] = useState("/images/hero-kulhad.jpg");
   const [tracksText, setTracksText] = useState("https://www.youtube.com/watch?v=mt9xg0mmt28");

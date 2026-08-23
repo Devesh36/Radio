@@ -20,8 +20,12 @@ function readJson<T>(path: string, fallback: T): T {
 }
 
 function writeJson(path: string, data: unknown) {
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, JSON.stringify(data, null, 2));
+  try {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify(data, null, 2));
+  } catch {
+    // Serverless filesystems are often read-only; Supabase is the source of truth.
+  }
 }
 
 function readExtras(): ExtraMap {

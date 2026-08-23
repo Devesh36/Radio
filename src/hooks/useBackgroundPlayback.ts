@@ -123,7 +123,7 @@ export function useBackgroundPlayback({
     session.metadata = new MediaMetadata({
       title: track.title,
       artist: track.artist,
-      album: "Baithak",
+      album: "Radio",
       artwork: artworkFor(track),
     });
     session.playbackState = isPlaying ? "playing" : "paused";

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { type LanguageKey } from "@/data/brand";
+import { useAuth } from "@clerk/nextjs";
+import { brand, type LanguageKey } from "@/data/brand";
 import { getAmbienceId } from "@/data/rooms";
 import { RoomAtmosphere } from "@/components/room/RoomAtmosphere";
 import { RoomChat } from "@/components/room/RoomChat";
@@ -33,16 +34,18 @@ function mergeTracks(base: Track[], extras: Track[], removed: string[] = []) {
 
 interface RoomExperienceProps {
   room: OfficialRoom;
+  initialIsHost?: boolean;
 }
 
-export function RoomExperience({ room }: RoomExperienceProps) {
+export function RoomExperience({ room, initialIsHost = false }: RoomExperienceProps) {
+  const { isLoaded, userId, getToken } = useAuth();
   const [entered, setEntered] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [language, setLanguage] = useState<LanguageKey>("hindi");
   const [radioSync, setRadioSync] = useState<RadioState | null>(null);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [showShare, setShowShare] = useState(false);
-  const [isHost, setIsHost] = useState(false);
+  const [isHost, setIsHost] = useState(initialIsHost);
   const [extras, setExtras] = useState<Record<LanguageKey, Track[]>>(EMPTY_EXTRAS);
   const extrasRef = useRef(extras);
   const [removed, setRemoved] = useState<Record<LanguageKey, string[]>>(EMPTY_REMOVED);
@@ -53,24 +56,37 @@ export function RoomExperience({ room }: RoomExperienceProps) {
     extrasRef.current = extras;
   }, [extras]);
 
+  const authHeaders = useCallback(async () => {
+    const token = await getToken();
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }, [getToken]);
+
   useEffect(() => {
-    if (!room.isCustom) return;
-    fetch("/api/rooms/custom")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.rooms?.some((item: { slug?: string }) => item.slug === room.slug)) {
-          setIsHost(true);
-        }
-      })
-      .catch(() => undefined);
-  }, [room.isCustom, room.slug]);
+    if (!room.isCustom || !isLoaded || !userId) return;
+    void (async () => {
+      const headers = await authHeaders();
+      const res = await fetch("/api/rooms/custom", { headers, credentials: "include" });
+      if (!res.ok) return;
+      const data = await res.json().catch(() => null);
+      if (data?.rooms?.some((item: { slug?: string }) => item.slug === room.slug)) {
+        setIsHost(true);
+      }
+    })();
+  }, [authHeaders, isLoaded, room.isCustom, room.slug, userId]);
 
   useEffect(() => {
     removedRef.current = removed;
   }, [removed]);
 
   const fetchRadio = useCallback(async (lang: LanguageKey) => {
-    const res = await fetch(`/api/rooms/${room.slug}/now?lang=${lang}`);
+    const headers = await authHeaders();
+    const res = await fetch(`/api/rooms/${room.slug}/now?lang=${lang}`, {
+      headers,
+      credentials: "include",
+    });
     if (!res.ok) return;
     const data = await res.json();
     if (data.track) {
@@ -88,7 +104,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
           offsetSec: data.offsetSec ?? 0,
         };
       });
-      if (typeof data.isHost === "boolean") setIsHost(data.isHost);
+      if (data.isHost === true) setIsHost(true);
       if (data.playlist) {
         setPlaylist((prev) => {
           const next = mergeTracks(
@@ -106,7 +122,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
         });
       }
     }
-  }, [room.slug]);
+  }, [authHeaders, room.slug]);
 
   const handleEnter = (name: string) => {
     setDisplayName(name);
@@ -118,9 +134,11 @@ export function RoomExperience({ room }: RoomExperienceProps) {
 
   const addTrackFromLink = async (url: string) => {
     const remaining = Math.max(0, MAX_CUSTOM_TRACKS - playlist.length);
+    const headers = await authHeaders();
     const resolveRes = await fetch("/api/tracks/resolve", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
+      credentials: "include",
       body: JSON.stringify({ url, limit: Math.max(1, remaining || 1) }),
     });
     const resolved = await resolveRes.json();
@@ -138,14 +156,15 @@ export function RoomExperience({ room }: RoomExperienceProps) {
       if (nextPlaylist.length >= MAX_CUSTOM_TRACKS) {
         if (added.length === 0) {
           throw new Error(
-            `This room can hold ${MAX_CUSTOM_TRACKS} songs. More rooms and bigger playlists land with Baithak Pro — coming soon.`,
+            `This room can hold ${MAX_CUSTOM_TRACKS} songs. More rooms and bigger playlists land with ${brand.name} Pro — coming soon.`,
           );
         }
         break;
       }
       const saveRes = await fetch(`/api/rooms/${room.slug}/tracks`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
+        credentials: "include",
         body: JSON.stringify({ track, language }),
       });
       if (!saveRes.ok) {
@@ -178,6 +197,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
     setRemoved(nextRemoved);
     setExtras(nextExtras);
     setPlaylist(nextPlaylist);
+    void fetchRadio(language);
     return added;
   };
 
@@ -200,7 +220,8 @@ export function RoomExperience({ room }: RoomExperienceProps) {
     setPlaylist((prev) => prev.filter((track) => track.youtubeId !== youtubeId));
     const res = await fetch(`/api/rooms/${room.slug}/tracks`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers: await authHeaders(),
+      credentials: "include",
       body: JSON.stringify({ youtubeId, language }),
     });
     if (!res.ok) {
@@ -245,7 +266,7 @@ export function RoomExperience({ room }: RoomExperienceProps) {
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
         <Link href="/" className="font-display shrink-0 text-lg normal-case tracking-normal text-[#f3e6d8]">
-          baithak<span className="text-[#c47a52]">.</span>
+          {brand.name.toLowerCase()}<span className="text-[#c47a52]">.</span>
         </Link>
         {entered && (
           <div className="min-w-0 flex-1 truncate text-center">

@@ -16,7 +16,7 @@ export const studioFeatureGroups = [
     ],
   },
   {
-    label: "Your baithak",
+    label: "Your radio",
     items: [
       { title: "Name, URL, backdrop", body: "Title, /r/ slug, tagline, image." },
       { title: "Share the door", body: "Send /r/your-room to friends." },

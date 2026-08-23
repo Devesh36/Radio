@@ -7,6 +7,7 @@ import { userOwnsCustomRoom } from "@/lib/room-auth";
 import { appendRoomExtra, removeRoomTrack } from "@/lib/room-extras";
 import { createAdminSupabase, persistenceUnavailable } from "@/lib/supabase/server";
 import { resolveRoom } from "@/lib/rooms-server";
+import type { Track } from "@/lib/types";
 import {
   clip,
   genericError,
@@ -70,7 +71,7 @@ export async function POST(
   const alreadyInCatalog = catalog.some((item) => item.youtubeId === parsed.youtube_id);
   if (!alreadyInCatalog && catalog.length >= MAX_CUSTOM_TRACKS) {
     return NextResponse.json(
-      { error: `This room can hold ${MAX_CUSTOM_TRACKS} songs. Baithak Pro (more rooms and songs) is coming soon.` },
+      { error: `This room can hold ${MAX_CUSTOM_TRACKS} songs. Radio Pro (more rooms and songs) is coming soon.` },
       { status: 400 },
     );
   }
@@ -82,7 +83,12 @@ export async function POST(
     duration_sec: parsed.duration_sec,
     added: true as const,
   };
-  const saved = appendRoomExtra(slug, language, track);
+  let saved: Track[] = [track];
+  try {
+    saved = appendRoomExtra(slug, language, track);
+  } catch {
+    saved = [track];
+  }
 
   const supabase = createAdminSupabase();
   if (supabase) {
@@ -105,7 +111,7 @@ export async function POST(
           .eq("room_id", room.id);
         if ((count ?? 0) >= MAX_CUSTOM_TRACKS) {
           return NextResponse.json(
-            { error: `This room can hold ${MAX_CUSTOM_TRACKS} songs. Baithak Pro (more rooms and songs) is coming soon.` },
+            { error: `This room can hold ${MAX_CUSTOM_TRACKS} songs. Radio Pro (more rooms and songs) is coming soon.` },
             { status: 400 },
           );
         }

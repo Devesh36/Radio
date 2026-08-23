@@ -1,4 +1,4 @@
-# Baithak
+# Radio
 
 Maahol-style Indian nostalgia audio rooms — built with **Next.js**, deployed on **Vercel**.
 

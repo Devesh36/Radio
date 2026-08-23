@@ -27,7 +27,7 @@ export default function TermsPage() {
           <li>Rooms can start with {MIN_CUSTOM_TRACKS} song and hold up to {MAX_CUSTOM_TRACKS}.</li>
           <li>Songs must be under 9 minutes.</li>
           <li>Tracks must be publicly available YouTube videos.</li>
-          <li>Baithak Pro, when it launches, will allow more rooms and larger playlists.</li>
+          <li>Radio Pro, when it launches, will allow more rooms and larger playlists.</li>
         </ul>
         <h2>Prohibited conduct</h2>
         <ul>

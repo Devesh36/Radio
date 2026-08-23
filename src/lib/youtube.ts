@@ -185,7 +185,7 @@ export async function resolveYouTubeTrack(input: string): Promise<Track | null> 
   try {
     const res = await fetch(
       `https://www.youtube.com/oembed?url=${encodeURIComponent(watchUrl)}&format=json`,
-      { headers: { "User-Agent": "Mozilla/5.0 Baithak" }, signal: AbortSignal.timeout(8000) },
+      { headers: { "User-Agent": "Mozilla/5.0 Radio" }, signal: AbortSignal.timeout(8000) },
     );
     if (res.ok) {
       const data = (await res.json()) as { title?: string; author_name?: string };
@@ -364,7 +364,7 @@ async function fetchOEmbed(url: string): Promise<string | null> {
   for (const endpoint of endpoints) {
     try {
       const res = await fetch(endpoint, {
-        headers: { "User-Agent": "Mozilla/5.0 Baithak" },
+        headers: { "User-Agent": "Mozilla/5.0 Radio" },
         signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) continue;

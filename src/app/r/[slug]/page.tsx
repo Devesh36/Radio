@@ -1,5 +1,8 @@
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
+import { brand } from "@/data/brand";
 import { RoomExperience } from "@/components/room/RoomExperience";
+import { userOwnsCustomRoom } from "@/lib/room-auth";
 import { resolveRoom } from "@/lib/rooms-server";
 
 export async function generateStaticParams() {
@@ -22,7 +25,7 @@ export async function generateMetadata({
   const resolved = await resolveRoom(slug);
   if (!resolved) return { title: "Room not found" };
   return {
-    title: `${resolved.room.name} — Baithak`,
+    title: `${resolved.room.name} — ${brand.name}`,
     description: resolved.room.tagline,
   };
 }
@@ -37,5 +40,9 @@ export default async function RoomPage({
 
   if (!resolved) notFound();
 
-  return <RoomExperience room={resolved.room} />;
+  const { userId } = await auth();
+  const initialIsHost =
+    resolved.type === "custom" && (await userOwnsCustomRoom(slug, userId));
+
+  return <RoomExperience room={resolved.room} initialIsHost={initialIsHost} />;
 }
