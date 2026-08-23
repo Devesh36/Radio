@@ -6,13 +6,23 @@ import type { Track } from "@/lib/types";
 const SILENT_WAV =
   "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
-function artworkFor(track: Track) {
+function artworkFor(track: Track, roomArt?: string) {
+  const artwork: MediaImage[] = [];
+  if (roomArt) {
+    const src =
+      roomArt.startsWith("/") && typeof window !== "undefined"
+        ? `${window.location.origin}${roomArt}`
+        : roomArt;
+    const type = /\.png(\?|$)/i.test(roomArt) ? "image/png" : "image/jpeg";
+    artwork.push({ src, sizes: "512x512", type });
+  }
   const id = track.youtubeId;
-  return [
+  artwork.push(
     { src: `https://img.youtube.com/vi/${id}/default.jpg`, sizes: "120x90", type: "image/jpeg" },
     { src: `https://img.youtube.com/vi/${id}/mqdefault.jpg`, sizes: "320x180", type: "image/jpeg" },
     { src: `https://img.youtube.com/vi/${id}/hqdefault.jpg`, sizes: "480x360", type: "image/jpeg" },
-  ];
+  );
+  return artwork;
 }
 
 export function useBackgroundPlayback({
@@ -24,6 +34,8 @@ export function useBackgroundPlayback({
   pause,
   skip,
   seek,
+  roomName,
+  roomArt,
 }: {
   isPlaying: boolean;
   track: Track | null;
@@ -33,6 +45,8 @@ export function useBackgroundPlayback({
   pause: () => void;
   skip: (dir: -1 | 1) => void;
   seek: (seconds: number) => void;
+  roomName?: string;
+  roomArt?: string;
 }) {
   const wantPlaying = useRef(false);
   const silentRef = useRef<HTMLAudioElement | null>(null);
@@ -123,8 +137,8 @@ export function useBackgroundPlayback({
     session.metadata = new MediaMetadata({
       title: track.title,
       artist: track.artist,
-      album: "Radio",
-      artwork: artworkFor(track),
+      album: roomName ?? "Radio",
+      artwork: artworkFor(track, roomArt),
     });
     session.playbackState = isPlaying ? "playing" : "paused";
 
@@ -151,7 +165,7 @@ export function useBackgroundPlayback({
       session.setActionHandler("seekforward", null);
       session.setActionHandler("seekto", null);
     };
-  }, [track, isPlaying]);
+  }, [track, isPlaying, roomName, roomArt]);
 
   useEffect(() => {
     if (!track || typeof navigator === "undefined" || !("mediaSession" in navigator)) return;

@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { officialRooms } from "@/data/rooms";
 import { useLiveRoomCounts } from "@/hooks/useLiveRoomCounts";
+import { getRadioState } from "@/lib/radio";
 import { RoomCard } from "@/components/RoomCard";
 
 /** Default homepage order when nobody is in the extra rooms. */
@@ -21,11 +23,21 @@ function featuredRank(slug: string): number {
 
 export function PublicRoomGrid() {
   const counts = useLiveRoomCounts();
+  // Set after mount so the server and client render the same initial HTML.
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const tick = window.setInterval(() => setNow(Date.now()), 15000);
+    return () => window.clearInterval(tick);
+  }, []);
+
   const ranked = officialRooms
     .map((room, index) => ({
       room,
       index,
       listeners: counts[room.slug] ?? 0,
+      nowPlaying: now ? getRadioState(room.catalogs.hindi, room.radioEpoch, now)?.track ?? null : null,
     }))
     .sort(
       (a, b) =>
@@ -36,8 +48,8 @@ export function PublicRoomGrid() {
 
   return (
     <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {ranked.map(({ room, listeners }) => (
-        <RoomCard key={room.slug} room={room} listeners={listeners} />
+      {ranked.map(({ room, listeners, nowPlaying }) => (
+        <RoomCard key={room.slug} room={room} listeners={listeners} nowPlaying={nowPlaying} />
       ))}
     </div>
   );

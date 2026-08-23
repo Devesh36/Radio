@@ -9,10 +9,11 @@ import { RoomAtmosphere } from "@/components/room/RoomAtmosphere";
 import { RoomChat } from "@/components/room/RoomChat";
 import { RoomRipples } from "@/components/room/RoomRipples";
 import { RoomOnboarding } from "@/components/room/RoomOnboarding";
-import { RoomPlayer } from "@/components/room/RoomPlayer";
+import { RoomPlayer, type LikeNote } from "@/components/room/RoomPlayer";
 import { RoomCapacityBanner, RoomPresence } from "@/components/room/RoomPresence";
 import { ShareSheet } from "@/components/room/ShareSheet";
 import { useRoomPresence } from "@/hooks/useRoomPresence";
+import { markLiked, unmarkLiked } from "@/lib/likes";
 import type { OfficialRoom, RadioState, Track } from "@/lib/types";
 import { MAX_CUSTOM_TRACKS } from "@/lib/limits";
 import { cssSafeUrl } from "@/lib/validate";
@@ -51,6 +52,12 @@ export function RoomExperience({ room, initialIsHost = false }: RoomExperiencePr
   const [removed, setRemoved] = useState<Record<LanguageKey, string[]>>(EMPTY_REMOVED);
   const removedRef = useRef(removed);
   const [playlist, setPlaylist] = useState<Track[]>(room.catalogs.hindi);
+  const [autoJoinLive, setAutoJoinLive] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("join") === "live") setAutoJoinLive(true);
+  }, []);
 
   useEffect(() => {
     extrasRef.current = extras;
@@ -64,14 +71,21 @@ export function RoomExperience({ room, initialIsHost = false }: RoomExperiencePr
     };
   }, [getToken]);
 
+  const [myRoom, setMyRoom] = useState<{ slug: string; title: string } | null>(null);
+
   useEffect(() => {
-    if (!room.isCustom || !isLoaded || !userId) return;
+    if (!isLoaded || !userId) return;
     void (async () => {
       const headers = await authHeaders();
       const res = await fetch("/api/rooms/custom", { headers, credentials: "include" });
       if (!res.ok) return;
       const data = await res.json().catch(() => null);
-      if (data?.rooms?.some((item: { slug?: string }) => item.slug === room.slug)) {
+      const rooms: Array<{ slug?: string; title?: string }> = Array.isArray(data?.rooms)
+        ? data.rooms
+        : [];
+      const mine = rooms.find((item) => typeof item.slug === "string");
+      if (mine?.slug) setMyRoom({ slug: mine.slug, title: mine.title ?? mine.slug });
+      if (room.isCustom && rooms.some((item) => item.slug === room.slug)) {
         setIsHost(true);
       }
     })();
@@ -233,6 +247,47 @@ export function RoomExperience({ room, initialIsHost = false }: RoomExperiencePr
     }
   };
 
+  const toggleLike = useCallback(
+    async (track: Track, like: boolean): Promise<LikeNote | null> => {
+      if (!userId) {
+        return { text: "Sign in to keep songs in your own room" };
+      }
+      if (!myRoom) {
+        return { text: "Make a private room to keep your songs →", href: "/studio" };
+      }
+      const headers = await authHeaders();
+      if (like) {
+        const res = await fetch(`/api/rooms/${myRoom.slug}/tracks`, {
+          method: "POST",
+          headers,
+          credentials: "include",
+          body: JSON.stringify({ track, language: "hindi" }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          return { text: data?.error ?? "Couldn’t save that song" };
+        }
+        markLiked(track.youtubeId, myRoom.slug);
+        if (myRoom.slug === room.slug) void fetchRadio(language);
+        return { text: `Saved to ${myRoom.title} ♥` };
+      }
+      const res = await fetch(`/api/rooms/${myRoom.slug}/tracks`, {
+        method: "DELETE",
+        headers,
+        credentials: "include",
+        body: JSON.stringify({ youtubeId: track.youtubeId, language: "hindi" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        return { text: data?.error ?? "Couldn’t remove that song" };
+      }
+      unmarkLiked(track.youtubeId);
+      if (myRoom.slug === room.slug) void fetchRadio(language);
+      return { text: `Removed from ${myRoom.title}` };
+    },
+    [authHeaders, fetchRadio, language, myRoom, room.slug, userId],
+  );
+
   useEffect(() => {
     if (!entered) return;
     fetchRadio(language);
@@ -320,6 +375,10 @@ export function RoomExperience({ room, initialIsHost = false }: RoomExperiencePr
             onRemoveTrack={room.isCustom && isHost ? removeTrackFromCatalog : undefined}
             radioLocked={false}
             liveSyncEnabled
+            autoJoinLive={autoJoinLive}
+            roomName={room.name}
+            roomArt={room.imageUrl}
+            onToggleLike={toggleLike}
           />
           <RoomChat
             roomSlug={room.slug}

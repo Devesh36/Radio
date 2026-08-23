@@ -15,10 +15,12 @@ interface ShareSheetProps {
 
 export function ShareSheet({ track, roomName, roomSlug, onClose }: ShareSheetProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedLive, setCopiedLive] = useState(false);
   const [mounted, setMounted] = useState(false);
   const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
   const origin = typeof window !== "undefined" ? window.location.origin : `https://${brand.domain}`;
   const shareUrl = `${origin}/r/${encodeURIComponent(roomSlug)}`;
+  const liveInviteUrl = `${shareUrl}?join=live`;
   const shareText = `Listening to ${track.title} in ${roomName}`;
 
   useEffect(() => {
@@ -40,6 +42,16 @@ export function ShareSheet({ track, roomName, roomSlug, onClose }: ShareSheetPro
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // ignore
+    }
+  };
+
+  const copyLiveInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(liveInviteUrl);
+      setCopiedLive(true);
+      setTimeout(() => setCopiedLive(false), 2000);
     } catch {
       // ignore
     }
@@ -110,6 +122,17 @@ export function ShareSheet({ track, roomName, roomSlug, onClose }: ShareSheetPro
         >
           {copied ? "Copied" : "Copy link"}
         </button>
+        <button
+          type="button"
+          onClick={copyLiveInvite}
+          className="mt-2 w-full rounded-xl py-3 text-sm font-semibold text-[#f3e6d8]"
+          style={{ border: "1px solid #c47a52", backgroundColor: "transparent" }}
+        >
+          {copiedLive ? "Copied" : "Copy Live invite"}
+        </button>
+        <p className="mt-1.5 text-center text-[11px] text-[#c9b8a8]">
+          A Live invite drops them straight onto the song you’re hearing.
+        </p>
         {canNativeShare && (
           <button
             type="button"

@@ -1,12 +1,14 @@
 import Link from "next/link";
-import type { OfficialRoom } from "@/lib/types";
+import type { OfficialRoom, Track } from "@/lib/types";
 
 export function RoomCard({
   room,
   listeners = 0,
+  nowPlaying = null,
 }: {
   room: OfficialRoom;
   listeners?: number;
+  nowPlaying?: Track | null;
 }) {
   return (
     <Link
@@ -23,6 +25,12 @@ export function RoomCard({
           <span className="live-pulse inline-block h-1.5 w-1.5 rounded-full bg-red-500" />
           {listeners > 0 ? `${listeners} listening` : "Live"}
         </span>
+        {nowPlaying && (
+          <p className="absolute bottom-2 left-3 right-3 truncate text-[11px] text-[#f3e6d8]/90">
+            <span className="text-[#c47a52]">♪</span> {nowPlaying.title}
+            <span className="text-[#c9b8a8]"> · {nowPlaying.artist}</span>
+          </p>
+        )}
       </div>
       <div className="p-4">
         <h3 className="font-display text-xl text-[#f3e6d8]">{room.name}</h3>

@@ -4,8 +4,24 @@ import { useCallback, useEffect, useRef, useState, type FormEvent, type MouseEve
 import { createPortal } from "react-dom";
 import YouTube, { type YouTubeEvent, type YouTubePlayer } from "react-youtube";
 import { type LanguageKey } from "@/data/brand";
+import { LyricsPanel } from "@/components/room/LyricsPanel";
 import { useBackgroundPlayback } from "@/hooks/useBackgroundPlayback";
+import { likedRoomSlug, LIKES_EVENT } from "@/lib/likes";
 import type { RadioState, Track } from "@/lib/types";
+
+export interface LikeNote {
+  text: string;
+  href?: string;
+}
+
+/** Extra ambience loops the listener can mix under the music. */
+const AMBIENCE_LAYERS = [
+  { key: "rain", label: "Rain", videoId: "zSKfyjcR4x4" },
+  { key: "fan", label: "Fan", videoId: "5E67XUpbiIE" },
+  { key: "highway", label: "Highway", videoId: "nABR88G_2cE" },
+] as const;
+
+type AmbienceLayerKey = (typeof AMBIENCE_LAYERS)[number]["key"];
 
 const PLAYER_VARS = {
   autoplay: 1,
@@ -76,6 +92,19 @@ function IconNext() {
   );
 }
 
+function IconHeart({ filled }: { filled: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path
+        d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+        fill={filled ? "#c47a52" : "none"}
+        stroke={filled ? "#c47a52" : "currentColor"}
+        strokeWidth="1.8"
+      />
+    </svg>
+  );
+}
+
 function IconRemove() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden>
@@ -123,6 +152,11 @@ interface RoomPlayerProps {
   onRemoveTrack?: (youtubeId: string) => Promise<void>;
   radioLocked?: boolean;
   liveSyncEnabled?: boolean;
+  autoJoinLive?: boolean;
+  roomName?: string;
+  roomArt?: string;
+  /** Saves (like=true) or removes (like=false) a track in the listener's own private room. */
+  onToggleLike?: (track: Track, like: boolean) => Promise<LikeNote | null>;
 }
 
 export function RoomPlayer({
@@ -137,12 +171,18 @@ export function RoomPlayer({
   onRemoveTrack,
   radioLocked = false,
   liveSyncEnabled = false,
+  autoJoinLive = false,
+  roomName,
+  roomArt,
+  onToggleLike,
 }: RoomPlayerProps) {
+  const startLive = radioLocked || (autoJoinLive && liveSyncEnabled);
   const [mounted, setMounted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(radioSync?.track ?? playlist[0] ?? null);
-  const [liveRadio, setLiveRadio] = useState(radioLocked);
+  const [liveRadio, setLiveRadio] = useState(startLive);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [mixOpen, setMixOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [addUrl, setAddUrl] = useState("");
   const [addError, setAddError] = useState("");
@@ -152,14 +192,25 @@ export function RoomPlayer({
   const [duration, setDuration] = useState(0);
   const [musicVolume, setMusicVolume] = useState(80);
   const [ambienceVolume, setAmbienceVolume] = useState(35);
+  const [layerVolumes, setLayerVolumes] = useState<Record<AmbienceLayerKey, number>>({
+    rain: 0,
+    fan: 0,
+    highway: 0,
+  });
+  const [liked, setLiked] = useState(false);
+  const [likeBusy, setLikeBusy] = useState(false);
+  const [likeNote, setLikeNote] = useState<LikeNote | null>(null);
+  const [lyricsOpen, setLyricsOpen] = useState(false);
+  const likeNoteTimer = useRef<number | undefined>(undefined);
 
   const musicRef = useRef<YouTubePlayer | null>(null);
   const ambienceRef = useRef<YouTubePlayer | null>(null);
+  const layerRefs = useRef<Partial<Record<AmbienceLayerKey, YouTubePlayer | null>>>({});
   const musicReady = useRef(false);
   const lastSyncKey = useRef("");
   const ignorePauseRef = useRef(false);
   const userPausedRef = useRef(false);
-  const liveRadioRef = useRef(radioLocked);
+  const liveRadioRef = useRef(startLive);
   const currentTrackRef = useRef<Track | null>(radioSync?.track ?? playlist[0] ?? null);
   const bootIdRef = useRef(radioSync?.track.youtubeId ?? playlist[0]?.youtubeId ?? "");
 
@@ -195,7 +246,28 @@ export function RoomPlayer({
     const storedAmbience = localStorage.getItem(`ambience-vol-${roomSlug}`);
     if (storedMusic) setMusicVolume(parseInt(storedMusic, 10));
     if (storedAmbience) setAmbienceVolume(parseInt(storedAmbience, 10));
+    try {
+      const storedMix = localStorage.getItem(`ambience-mix-${roomSlug}`);
+      if (storedMix) {
+        const parsed = JSON.parse(storedMix) as Partial<Record<AmbienceLayerKey, number>>;
+        setLayerVolumes((prev) => ({ ...prev, ...parsed }));
+      }
+    } catch {
+      // ignore corrupt mix settings
+    }
   }, [roomSlug]);
+
+  useEffect(() => {
+    const update = () => {
+      const id = currentTrackRef.current?.youtubeId;
+      setLiked(id ? Boolean(likedRoomSlug(id)) : false);
+    };
+    update();
+    window.addEventListener(LIKES_EVENT, update);
+    return () => window.removeEventListener(LIKES_EVENT, update);
+  }, [currentTrack]);
+
+  useEffect(() => () => window.clearTimeout(likeNoteTimer.current), []);
 
   const playTrack = useCallback(
     (track: Track, startSeconds = 0, fromRadio = false) => {
@@ -274,6 +346,26 @@ export function RoomPlayer({
       // ignore
     }
   }, [ambienceVolume, roomSlug]);
+
+  useEffect(() => {
+    for (const layer of AMBIENCE_LAYERS) {
+      const volume = layerVolumes[layer.key] ?? 0;
+      if (volume <= 0) {
+        layerRefs.current[layer.key] = null;
+        continue;
+      }
+      try {
+        layerRefs.current[layer.key]?.setVolume(volume);
+      } catch {
+        // ignore
+      }
+    }
+    try {
+      localStorage.setItem(`ambience-mix-${roomSlug}`, JSON.stringify(layerVolumes));
+    } catch {
+      // ignore
+    }
+  }, [layerVolumes, roomSlug]);
 
   useEffect(() => {
     if (!isPlaying) return;
@@ -361,6 +453,7 @@ export function RoomPlayer({
     try {
       musicRef.current?.playVideo();
       ambienceRef.current?.playVideo();
+      for (const player of Object.values(layerRefs.current)) player?.playVideo();
       setIsPlaying(true);
     } catch {
       // ignore
@@ -372,6 +465,7 @@ export function RoomPlayer({
     try {
       musicRef.current?.pauseVideo();
       ambienceRef.current?.pauseVideo();
+      for (const player of Object.values(layerRefs.current)) player?.pauseVideo();
       setIsPlaying(false);
     } catch {
       // ignore
@@ -441,7 +535,33 @@ export function RoomPlayer({
     pause: pausePlayback,
     skip,
     seek,
+    roomName,
+    roomArt,
   });
+
+  const flashLikeNote = (note: LikeNote | null) => {
+    window.clearTimeout(likeNoteTimer.current);
+    setLikeNote(note);
+    if (note) {
+      likeNoteTimer.current = window.setTimeout(() => setLikeNote(null), 3200);
+    }
+  };
+
+  const toggleHeart = async () => {
+    const active = currentTrackRef.current;
+    if (!active || !onToggleLike || likeBusy) return;
+    setLikeBusy(true);
+    try {
+      const note = await onToggleLike(active, !liked);
+      flashLikeNote(note);
+    } catch (error) {
+      flashLikeNote({
+        text: error instanceof Error ? error.message : "Couldn’t save that song",
+      });
+    } finally {
+      setLikeBusy(false);
+    }
+  };
 
   const seekFromClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (duration <= 0) return;
@@ -527,6 +647,96 @@ export function RoomPlayer({
       ? createPortal(
           <>
             <div className="room-dock fixed left-1/2 z-[80] w-[min(calc(100vw-1.25rem),640px)] -translate-x-1/2">
+              {likeNote && (
+                <div className="mb-2 flex justify-center">
+                  {likeNote.href ? (
+                    <a
+                      href={likeNote.href}
+                      className="rounded-full px-4 py-1.5 text-xs text-[#f3e6d8] underline decoration-[#c47a52]"
+                      style={{ backgroundColor: "rgba(12,10,9,0.9)", backdropFilter: "blur(18px)" }}
+                    >
+                      {likeNote.text}
+                    </a>
+                  ) : (
+                    <span
+                      className="rounded-full px-4 py-1.5 text-xs text-[#f3e6d8]"
+                      style={{ backgroundColor: "rgba(12,10,9,0.9)", backdropFilter: "blur(18px)" }}
+                    >
+                      {likeNote.text}
+                    </span>
+                  )}
+                </div>
+              )}
+              {mixOpen && (
+                <div
+                  className="mb-2 rounded-2xl px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)]"
+                  style={{ backgroundColor: "rgba(12,10,9,0.9)", backdropFilter: "blur(18px)" }}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[#c47a52]">
+                      Ambience mixer
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setMixOpen(false)}
+                      className="text-xs text-[#c9b8a8] hover:text-[#f3e6d8]"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center gap-3">
+                      <span className="w-16 shrink-0 text-xs text-[#f3e6d8]">Music</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={musicVolume}
+                        onChange={(e) => setMusicVolume(parseInt(e.target.value, 10))}
+                        className="h-1 flex-1 accent-[#c47a52]"
+                      />
+                      <span className="w-8 shrink-0 text-right text-[11px] tabular-nums text-[#c9b8a8]">
+                        {musicVolume}
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-3">
+                      <span className="w-16 shrink-0 text-xs text-[#f3e6d8]">Room</span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={ambienceVolume}
+                        onChange={(e) => setAmbienceVolume(parseInt(e.target.value, 10))}
+                        className="h-1 flex-1 accent-[#c47a52]"
+                      />
+                      <span className="w-8 shrink-0 text-right text-[11px] tabular-nums text-[#c9b8a8]">
+                        {ambienceVolume}
+                      </span>
+                    </label>
+                    {AMBIENCE_LAYERS.map((layer) => (
+                      <label key={layer.key} className="flex items-center gap-3">
+                        <span className="w-16 shrink-0 text-xs text-[#f3e6d8]">{layer.label}</span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={layerVolumes[layer.key] ?? 0}
+                          onChange={(e) =>
+                            setLayerVolumes((prev) => ({
+                              ...prev,
+                              [layer.key]: parseInt(e.target.value, 10),
+                            }))
+                          }
+                          className="h-1 flex-1 accent-[#c47a52]"
+                        />
+                        <span className="w-8 shrink-0 text-right text-[11px] tabular-nums text-[#c9b8a8]">
+                          {layerVolumes[layer.key] ?? 0}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div
                 className="overflow-hidden rounded-2xl px-3 py-2 shadow-[0_20px_60px_rgba(0,0,0,0.45)] sm:px-4 sm:py-3"
                 style={{ backgroundColor: "rgba(12,10,9,0.82)", backdropFilter: "blur(18px)" }}
@@ -548,6 +758,19 @@ export function RoomPlayer({
                     <p className="truncate text-sm font-semibold text-[#f3e6d8]">{track.title}</p>
                     <p className="truncate text-xs text-[#c9b8a8]">{track.artist}</p>
                   </div>
+                  {onToggleLike && (
+                    <button
+                      type="button"
+                      onClick={toggleHeart}
+                      disabled={likeBusy}
+                      className="shrink-0 p-1.5 text-[#c9b8a8] hover:text-[#f3e6d8] disabled:opacity-50"
+                      aria-pressed={liked}
+                      aria-label={liked ? "Remove from your room" : "Save to your room"}
+                      title={liked ? "In your room" : "Save to your room"}
+                    >
+                      <IconHeart filled={liked} />
+                    </button>
+                  )}
                   {liveSyncEnabled && (
                     <button
                       type="button"
@@ -565,6 +788,22 @@ export function RoomPlayer({
                     className="shrink-0 px-1 py-2 text-[11px] uppercase tracking-[0.16em] text-[#c9b8a8] hover:text-[#f3e6d8]"
                   >
                     Songs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMixOpen((open) => !open)}
+                    className="shrink-0 px-1 py-2 text-[11px] uppercase tracking-[0.16em] hover:text-[#f3e6d8]"
+                    style={{ color: mixOpen ? "#c47a52" : "#c9b8a8" }}
+                    aria-expanded={mixOpen}
+                  >
+                    Mix
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLyricsOpen(true)}
+                    className="shrink-0 px-1 py-2 text-[11px] uppercase tracking-[0.16em] text-[#c9b8a8] hover:text-[#f3e6d8]"
+                  >
+                    Lyrics
                   </button>
                   {onShare && (
                     <button
@@ -784,6 +1023,14 @@ export function RoomPlayer({
                 </div>
               </div>
             )}
+            {lyricsOpen && (
+              <LyricsPanel
+                track={track}
+                elapsed={elapsed}
+                onSeek={locked ? undefined : seek}
+                onClose={() => setLyricsOpen(false)}
+              />
+            )}
           </>,
           document.body,
         )
@@ -804,6 +1051,30 @@ export function RoomPlayer({
           }}
           onReady={onAmbienceReady}
         />
+        {AMBIENCE_LAYERS.filter((layer) => (layerVolumes[layer.key] ?? 0) > 0).map((layer) => (
+          <YouTube
+            key={layer.key}
+            videoId={layer.videoId}
+            opts={{
+              ...HIDDEN_OPTS,
+              playerVars: {
+                ...PLAYER_VARS,
+                loop: 1,
+                playlist: layer.videoId,
+              },
+            }}
+            onReady={(event: YouTubeEvent) => {
+              layerRefs.current[layer.key] = event.target;
+              try {
+                event.target.setVolume(layerVolumes[layer.key] ?? 0);
+                event.target.unMute();
+                event.target.playVideo();
+              } catch {
+                // ignore
+              }
+            }}
+          />
+        ))}
       </div>
       {dock}
     </>

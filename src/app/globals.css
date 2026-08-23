@@ -151,6 +151,36 @@ summary {
   animation: ticker 28s linear infinite;
 }
 
+@keyframes lyrics-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+
+.lyrics-panel {
+  animation: lyrics-panel-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@keyframes lyric-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+    filter: blur(3px);
+  }
+}
+
+.lyric-line-in {
+  animation: lyric-line-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyrics-panel,
+  .lyric-line-in {
+    animation: none;
+  }
+}
+
 .prose-page h1 {
   font-family: var(--font-serif), Georgia, serif;
   font-size: clamp(2rem, 5vw, 3rem);
